@@ -28,7 +28,9 @@ STATE_FILE = BANK / "session_state.json"
 VOICE_ENABLED = os.environ.get("VOICE_ENABLED", "true").lower() == "true"
 
 FATHER_LAW = """FATHER LAW (godfather-wizard, the Grand Master)
-1. DELEGATION: re-implements nothing; invokes siblings via ~/bin only.
+1. DELEGATION: re-implements nothing; invokes siblings where
+   they live: the bin lane (~/bin) first, the installed package
+   second; a sibling found nowhere is honestly absent.
 2. TRUTH FIRST: multi-step runs anchor facts with truthwiz before acting.
 3. CONSENT WALL: mutations are staged via writewiz propose; godfather
    never supplies the 'y'. The commit keystroke belongs to the Governor.
