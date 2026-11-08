@@ -12,9 +12,11 @@ FATHER LAW:
 
 import datetime as dt
 import json
+import shutil
 import subprocess
 import os
 from collections import Counter
+from importlib import metadata as importlib_metadata
 from pathlib import Path
 
 HOME = Path.home()
@@ -92,10 +94,43 @@ def ledger_rows():
             rows.append({"at": "?", "event": "CORRUPT_ROW", "target": line, "detail": ""})
     return rows
 
+def installed_sibling_names():
+    """Wizard names this installation itself provides (entry points).
+
+    A pip-installed copy of the toolkit registers its wizards as entry
+    points; those names are the fleet a user of the sampler actually has.
+    Returns an empty set when no distribution metadata is present (for
+    example when running from a bare source tree).
+    """
+    try:
+        dist = importlib_metadata.distribution("wiz-central-toolkit")
+    except importlib_metadata.PackageNotFoundError:
+        return set()
+    names = set()
+    for ep in dist.entry_points:
+        if ep.group in ("console_scripts", "wiz_central_toolkit"):
+            names.add(ep.name)
+    return names
+
+
+def resolve_sibling(name):
+    """Find a sibling wizard's executable, or None.
+
+    The sovereign fleet's bin lane (~/bin) wins when the citizen is there;
+    otherwise the PATH is asked, which is where a package installer puts
+    the console scripts. A name that resolves nowhere is honestly absent.
+    """
+    exe = BIN / name
+    if exe.exists():
+        return exe
+    found = shutil.which(name)
+    return Path(found) if found else None
+
+
 def call_sibling(cmd_list, stdin=None):
-    exe = BIN / cmd_list[0]
-    if not exe.exists():
-        return 2, f"[FAIL] sibling not found on bin lane: {cmd_list[0]}"
+    exe = resolve_sibling(cmd_list[0])
+    if exe is None:
+        return 2, f"[FAIL] sibling not found (bin lane or PATH): {cmd_list[0]}"
     try:
         r = subprocess.run([str(exe)] + cmd_list[1:], input=stdin,
                            capture_output=True, text=True, timeout=180)
@@ -163,9 +198,18 @@ def route_directive(directive, args):
     return None, "no route matches this intent"
 
 def fleet_census():
-    """Health sweep: count sibling *wiz executables on the bin lane."""
-    wizs = sorted(BIN.glob("*wiz"))
-    return len(wizs), [w.name for w in wizs]
+    """Health sweep: the siblings that can actually be invoked.
+
+    Counts the bin lane's *wiz executables plus every wizard this
+    installation provides (its entry points) that resolves to a real
+    executable. One meaning of 'present', shared by fleet, siblings,
+    census and status: installed and invocable.
+    """
+    names = {w.name for w in BIN.glob("*wiz")}
+    names |= {n for n in installed_sibling_names()
+              if n.endswith("wiz") and resolve_sibling(n) is not None}
+    wizs = sorted(names)
+    return len(wizs), wizs
 
 def list_all_slash_commands():
     """Return mapping of /slash -> wizard command."""

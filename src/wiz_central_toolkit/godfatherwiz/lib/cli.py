@@ -7,7 +7,7 @@ import readline
 from collections import Counter
 from .godfather_wizard import (
     FATHER_LAW, call_sibling, call_ollama, speak_if_enabled,
-    truth_anchor, route_directive, fleet_census, load_routes,
+    truth_anchor, route_directive, fleet_census, resolve_sibling, load_routes,
     save_routes, journal, ledger_rows, _now, schedule_task,
     queue_tasks, render_banner, list_all_slash_commands,
     session_load, session_save)
@@ -107,7 +107,7 @@ def _dispatch():
     
     if cmd == "fleet":
         count, names = fleet_census()
-        print(f"[OK] {count} sibling wizards on the bin lane")
+        print(f"[OK] {count} sibling wizards installed")
         for n in names:
             print(f"  {n}")
         return 0
@@ -135,8 +135,11 @@ def _dispatch():
     if cmd == "status":
         key_wizards = ["truthwiz", "writewiz", "pythonwiz", "bootwiz", "repairwiz"]
         for w in key_wizards:
+            if resolve_sibling(w) is None:
+                print(f"[FAIL] {w} unresponsive")
+                continue
             rc, out = call_sibling([w, "--help"])
-            # exit 2 = usage fallthrough on --help, NOT death. Death = rc 1 or missing.
+            # exit 2 = usage fallthrough on --help, NOT death. Death = rc 1.
             alive = rc in (0, 2)
             print(f"[{'OK' if alive else 'FAIL'}] {w} {'reachable' if alive else 'unresponsive'}")
         return 0
@@ -517,25 +520,25 @@ def run_repl():
                 print(out or "(no output)")
             elif cmd == "/wiz" and len(raw_input.split()) > 1:
                 # UNIVERSAL DELEGATION: /wiz <citizen> [args...]
-                # Resolves against the real bin lane — a citizen that
+                # Resolves against the installed fleet — a citizen that
                 # does not exist on disk cannot be invoked. Zero fabrication.
                 parts = raw_input.split()
                 target = parts[1]
                 wiz_args = parts[2:]
-                bin_path = Path.home() / "bin"
-                real = bin_path / target
-                if not real.exists():
-                    candidates = [w.name for w in sorted(bin_path.glob(target + "*"))]
+                real = resolve_sibling(target)
+                if real is None:
+                    candidates = [n for n in fleet_census()[1]
+                                  if n.startswith(target)]
                     if not candidates:
-                        print(f"out of scope — no citizen named '{target}' on the bin lane")
+                        print(f"out of scope — no citizen named '{target}' installed")
                         continue
                     if len(candidates) == 1:
-                        real = bin_path / candidates[0]
+                        real = resolve_sibling(candidates[0])
                     else:
                         print(f"[FAIL] ambiguous citizen '{target}': {candidates}")
                         continue
                 print(f"[ROUTE] universal delegation -> {real.name} {' '.join(wiz_args)}".rstrip())
-                rc, out = call_sibling([str(real)] + wiz_args)
+                rc, out = call_sibling([real.name] + wiz_args)
                 print(out or "(no output)")
             else:
                 print(f"[FAIL] unknown slash command: {cmd}")
