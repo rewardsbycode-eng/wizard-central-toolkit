@@ -45,3 +45,27 @@ wiz json validate config.json
 godfatherwiz census
 godfatherwiz status
 godfatherwiz repl
+```
+
+---
+
+## Wizard Central Pro AI Modes Toolkit — still in the making
+
+This free toolkit is the sampler: twelve local-first wizards
+under Apache 2.0, yours to use and build on.
+
+Not in the sampler: truthwiz, repairwiz, ollamawiz,
+whiteboardwiz, manualwiz and bootwiz. They are part of the
+**Wizard Central Pro AI Modes Toolkit**, still in the making:
+a fleet growing toward 41 wizards; 70 AI modes that advise;
+23 guard modes that bind; seat cards that cast; creations of
+nine kinds — wizards, AI modes, tools, skills, tasks, guard
+modes, scripts, seat cards, and projects; a sealed locker
+(CVLT Arbiter) for a person's own creations; and a gated
+bridge that opens only by a person's yes, asked twice — and
+every crossing generates a receipt.
+
+Pro is not released, and there is no signup yet. When it is
+ready, this page will say where to find it.
+
+*A command is what you type. The name is what the project is.*
