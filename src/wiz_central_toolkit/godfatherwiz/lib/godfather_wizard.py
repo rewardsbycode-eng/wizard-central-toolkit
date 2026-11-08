@@ -102,9 +102,14 @@ def installed_sibling_names():
     Returns an empty set when no distribution metadata is present (for
     example when running from a bare source tree).
     """
-    try:
-        dist = importlib_metadata.distribution("wiz-central-toolkit")
-    except importlib_metadata.PackageNotFoundError:
+    dist = None
+    for dist_name in ("wizard-central-toolkit", "wiz-central-toolkit"):
+        try:
+            dist = importlib_metadata.distribution(dist_name)
+            break
+        except importlib_metadata.PackageNotFoundError:
+            continue
+    if dist is None:
         return set()
     names = set()
     for ep in dist.entry_points:

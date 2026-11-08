@@ -1,11 +1,11 @@
 #!/bin/bash
-# wiz-central-toolkit System Dependencies Installer
+# wizard-central-toolkit System Dependencies Installer
 # Auto-detects OS and installs missing CLI tools (especially jq)
 
 set -e
 
 echo "=========================================="
-echo "wiz-central-toolkit Dependency Installer"
+echo "wizard-central-toolkit Dependency Installer"
 echo "=========================================="
 
 # Check for jq

@@ -26,10 +26,12 @@ ALIASES = {
 
 
 def package_version() -> str:
-    try:
-        return importlib.metadata.version("wiz-central-toolkit")
-    except importlib.metadata.PackageNotFoundError:
-        return "0.2.0"
+    for dist_name in ("wizard-central-toolkit", "wiz-central-toolkit"):
+        try:
+            return importlib.metadata.version(dist_name)
+        except importlib.metadata.PackageNotFoundError:
+            continue
+    return "0.2.0"
 
 
 def print_help() -> None:

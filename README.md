@@ -1,4 +1,4 @@
-# Wiz Central Toolkit (`wiz-central-toolkit`)
+# Wizard Central Toolkit (`wizard-central-toolkit`)
 
 > **The Sovereign Developer Utilities Fleet & AI Router**  
 > Fast, zero-dependency, local-first CLI tools designed for Linux development, system orchestration, and deterministic safety policy execution.
@@ -7,7 +7,7 @@
 [![Validation Suite](https://img.shields.io/badge/Validation-13%2F13_Passed-brightgreen.svg)](#validation--testing)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 
-`wiz-central-toolkit` is a production-grade suite of 12 developer utilities that run locally with minimal overhead and deterministic output. Designed to operate standalone as individual CLI binaries or orchestrated through **GodfatherWiz** and **Wiz**, every tool in this repository is fully functional, disk-verified, and CI-tested.
+`wizard-central-toolkit` is a production-grade suite of 12 developer utilities that run locally with minimal overhead and deterministic output. Designed to operate standalone as individual CLI binaries or orchestrated through **GodfatherWiz** and **Wiz**, every tool in this repository is fully functional, disk-verified, and CI-tested.
 
 ---
 
