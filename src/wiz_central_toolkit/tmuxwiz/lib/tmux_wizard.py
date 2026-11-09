@@ -2,7 +2,36 @@ import sys
 """tmux_wizard - sovereign tmux session manager (stdlib only)."""
 import subprocess
 
-SUBCOMMANDS = ("new", "attach", "kill", "list", "census", "rename")
+SUBCOMMANDS = ("new", "attach", "kill", "list", "census", "rename",
+               "capture", "detach", "law", "version")
+
+LAW_TEXT = """TMUX LAW (Tmux Wizard, the session keeper)
+1. The Tmux Wizard manages sessions; the truth about them comes
+   from tmux itself, never from memory or invention.
+2. tmux is always called with an argument list, never through
+   a shell.
+3. capture reads a pane; it changes nothing.
+4. detach frees the client; the session and its work keep
+   running.
+5. kill is the only destroyer, and it names its session.
+"""
+
+
+def package_version():
+    try:
+        from importlib import metadata
+        for _n in ("wizard-central-toolkit", "wiz-central-toolkit"):
+            try:
+                return metadata.version(_n)
+            except metadata.PackageNotFoundError:
+                continue
+    except Exception:
+        pass
+    try:
+        from wiz_central_toolkit import __version__
+        return __version__
+    except Exception:
+        return "unknown"
 
 
 def _run(args):
@@ -45,8 +74,11 @@ def cmd_attach(name):
     if name not in _sessions():
         print("[FAIL] no session '%s'" % name)
         return 1
-    print("[OK] attaching to '%s'" % name)
-    rc, _, _ = _run(["attach-session", "-t", name])
+    rc, _, err = _run(["attach-session", "-t", name])
+    if rc == 0:
+        print("[OK] attached to '%s'" % name)
+    else:
+        print("[FAIL] attach to '%s' failed%s" % (name, (": " + err) if err else ""))
     return rc
 
 
@@ -89,6 +121,30 @@ def cmd_census():
     return 0 if ok == total else 1
 
 
+def cmd_capture(name, lines=200):
+    if name not in _sessions():
+        print("[FAIL] no session '%s'" % name)
+        return 1
+    rc, out, err = _run(["capture-pane", "-t", name, "-p", "-S", "-%d" % lines])
+    if rc == 0:
+        print(out)
+    else:
+        print("[FAIL] capture from '%s' failed%s" % (name, (": " + err) if err else ""))
+    return rc
+
+
+def cmd_detach(name):
+    if name not in _sessions():
+        print("[FAIL] no session '%s'" % name)
+        return 1
+    rc, _, err = _run(["detach-client", "-s", name])
+    if rc == 0:
+        print("[OK] clients detached from '%s' (session keeps running)" % name)
+    else:
+        print("[FAIL] detach from '%s' failed%s" % (name, (": " + err) if err else ""))
+    return rc
+
+
 def cmd_rename(old, new):
     if old not in _sessions():
         print("[FAIL] no session '%s'" % old)
@@ -103,16 +159,27 @@ def cmd_rename(old, new):
 
 def main(argv):
     if not argv or argv[0] in ("-h", "--help", "help"):
-        print("tmuxwiz - sovereign tmux session manager")
-        print("usage: tmuxwiz <new|attach|kill|list|census|rename> [args]")
+        print("Tmux Wizard — sovereign tmux session manager")
+        print("alias: tmuxwiz")
+        print("usage: tmux_wizard <new|attach|kill|list|census|rename|capture|detach|law|version> [args]")
         print("  new <name> [dir]    create session (default cwd)")
         print("  attach <name>       join session")
         print("  kill <name>         destroy session")
         print("  list                names of live sessions")
         print("  census              health of every session")
         print("  rename <old> <new>  rename session")
+        print("  capture <name> [lines]  print a pane's recent output (read-only)")
+        print("  detach <name>       detach clients; the session keeps running")
+        print("  law                 print the TMUX LAW alone")
+        print("  version             print the version")
         return 0
     cmd, rest = argv[0], argv[1:]
+    if cmd == "law":
+        print(LAW_TEXT)
+        return 0
+    if cmd == "version":
+        print("tmux_wizard %s" % package_version())
+        return 0
     if cmd not in SUBCOMMANDS:
         print("out of scope - unknown command: %s" % cmd)
         return 2
@@ -136,6 +203,23 @@ def main(argv):
             print("[FAIL] rename requires old and new names")
             return 2
         return cmd_rename(rest[0], rest[1])
+    if cmd == "capture":
+        if not rest:
+            print("[FAIL] capture requires a session name")
+            return 2
+        lines = 200
+        if len(rest) > 1:
+            try:
+                lines = int(rest[1])
+            except ValueError:
+                print("[FAIL] capture lines must be a number")
+                return 2
+        return cmd_capture(rest[0], lines)
+    if cmd == "detach":
+        if not rest:
+            print("[FAIL] detach requires a name")
+            return 2
+        return cmd_detach(rest[0])
     if cmd == "list":
         return cmd_list()
     return cmd_census()

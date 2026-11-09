@@ -11,6 +11,27 @@ def _render_dependencies():
 
 BANNER_FONT = "ansi_regular"
 
+USAGE = """Banner Wizard — ASCII banner wizard
+usage: bannerwiz <words...> [--subtitle TEXT] | --demo | --themes | --styles | --sizes | --fonts | --interactive
+       bannerwiz --help | --version"""
+
+def _version():
+    try:
+        from importlib import metadata
+        for _n in ("wizard-central-toolkit", "wiz-central-toolkit"):
+            try:
+                return metadata.version(_n)
+            except metadata.PackageNotFoundError:
+                continue
+    except Exception:
+        pass
+    try:
+        from wiz_central_toolkit import __version__
+        return __version__
+    except Exception:
+        return "unknown"
+
+
 def render_sovereign(words, subtitle=None):
     """The Sovereign mural: stacked block words, purple crest / blue base per word."""
     console, Text, figlet_format = _render_dependencies()
@@ -25,13 +46,14 @@ def render_sovereign(words, subtitle=None):
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
-    if argv and argv[0] in ("-h", "--help"):
-        print("bannerwiz - ASCII banner wizard")
-        print("usage: bannerwiz <words...> [--subtitle TEXT] | --demo | --themes | --styles | --interactive")
+    if argv and argv[0] in ("-h", "--help", "help"):
+        print(USAGE)
+        return 0
+    if argv and argv[0] == "--version":
+        print(f"bannerwiz {_version()}")
         return 0
     if not argv:
-        print("bannerwiz - ASCII banner wizard")
-        print("usage: bannerwiz <words...> [--subtitle TEXT] | --demo | --themes | --styles | --interactive")
+        print(USAGE)
         return 0
     if argv[0] in ("--demo", "--themes", "--styles", "--sizes", "--interactive", "--fonts"):
         import runpy

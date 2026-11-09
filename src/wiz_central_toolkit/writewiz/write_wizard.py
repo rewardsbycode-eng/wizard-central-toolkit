@@ -369,9 +369,9 @@ def commit(draft: Path, meta: Path, confirm_reader=None):
     return False, "[FAIL] disk differs from draft after write — investigate", target
 
 
-LAW_TEXT = """WRITE LAW (write-wizard, the consent wall)
+LAW_TEXT = """WRITE LAW (Write Wizard, the consent wall)
 1. propose stages content in ~/.write-wizard/pending — disk untouched.
-2. preview runs the pythonwiz gate and diffwiz against disk truth.
+2. preview runs the Python Wizard gate and the Diff Wizard against disk truth.
 3. commit opens ONLY on a literal 'y' typed live by the Governor.
 4. No --yes. No --force. No batch. No env var. No exception.
 5. A failing syntax gate is a hard fail: commit MUST refuse.

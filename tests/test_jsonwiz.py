@@ -126,7 +126,7 @@ class TestCLI:
         rc = jsonwiz_main.main([])
         out = capsys.readouterr().out
         assert rc == 0
-        assert "usage: jsonwiz" in out
+        assert "usage: json_wizard" in out
 
     def test_validate_valid_file(self, tmp_path, capsys):
         f = _write(tmp_path, "good.json", '{"a": 1}')

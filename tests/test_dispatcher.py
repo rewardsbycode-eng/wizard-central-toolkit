@@ -32,7 +32,7 @@ def test_alias_dispatch(monkeypatch):
     monkeypatch.setattr(
         dispatcher,
         "get_tool_main",
-        lambda name: fake_tool if name == "rustwiz" else None,
+        lambda name: fake_tool if name == "rust_wizard" else None,
     )
 
     result = dispatcher.main(["rust", "check", "."])
@@ -49,7 +49,7 @@ def test_json_output(monkeypatch, capsys):
     monkeypatch.setattr(
         dispatcher,
         "get_tool_main",
-        lambda name: fake_tool if name == "rustwiz" else None,
+        lambda name: fake_tool if name == "rust_wizard" else None,
     )
 
     result = dispatcher.main(["--json", "rust", "check", "."])
@@ -58,7 +58,7 @@ def test_json_output(monkeypatch, capsys):
     payload = json.loads(captured.out)
 
     assert result == 0
-    assert payload["tool"] == "rustwiz"
+    assert payload["tool"] == "rust_wizard"
     assert payload["args"] == ["check", "."]
     assert payload["exit_code"] == 0
     assert payload["stdout"] == "tool output\n"

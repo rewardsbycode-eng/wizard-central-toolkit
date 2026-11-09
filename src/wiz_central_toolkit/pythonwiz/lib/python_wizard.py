@@ -1,6 +1,7 @@
 """python-wizard core: standalone syntax doctor for Python files."""
 import ast
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -34,10 +35,39 @@ class PythonWizard:
         first = content.splitlines()[0] if content else ""
         if not first.startswith("#!"):
             return {"file": str(path), "valid": False, "error": "no shebang line"}
-        interp = Path(first[2:])
-        if not interp.is_absolute() or not interp.exists():
-            return {"file": str(path), "valid": False, "error": f"interpreter missing: {first[2:]}"}
-        return {"file": str(path), "valid": True, "interpreter": str(interp)}
+        parts = first[2:].split()
+        if not parts:
+            return {"file": str(path), "valid": False, "error": "empty shebang line"}
+        exe = parts[0]
+        if Path(exe).name == "env":
+            # env form: #!/usr/bin/env [-flags] [VAR=value ...] <interpreter> [args]
+            cmd = None
+            for tok in parts[1:]:
+                if tok.startswith("-"):
+                    continue
+                if "=" in tok and "/" not in tok.split("=")[0]:
+                    continue  # VAR=value assignment, not the command
+                cmd = tok
+                break
+            if cmd is None:
+                return {"file": str(path), "valid": False,
+                        "error": f"interpreter missing: {first[2:]}"}
+            found = shutil.which(cmd)
+            if not found:
+                return {"file": str(path), "valid": False,
+                        "error": f"interpreter missing: {cmd}"}
+            return {"file": str(path), "valid": True, "interpreter": found}
+        interp = Path(exe)
+        if interp.is_absolute():
+            if not interp.exists():
+                return {"file": str(path), "valid": False,
+                        "error": f"interpreter missing: {exe}"}
+            return {"file": str(path), "valid": True, "interpreter": str(interp)}
+        found = shutil.which(exe)
+        if not found:
+            return {"file": str(path), "valid": False,
+                    "error": f"interpreter missing: {exe}"}
+        return {"file": str(path), "valid": True, "interpreter": found}
 
     # ---------- helpers ----------
     @staticmethod
@@ -219,13 +249,34 @@ class PythonWizard:
                     out.append((n.lineno, "bare" if n.type is None else name, swallows))
         return out
 
-    def secrets_scan(self, path: Path) -> list:
+    def secrets_scan(self, path: Path, show_secrets: bool = False) -> list:
+        """Hardcoded-credential findings as (lineno, kind, text) rows.
+
+        Redaction is the default (AVS ruling, 2026-11-09 — the RS006
+        paste-safety standard applied toolkit-wide): `text` is the
+        source line with the secret value replaced by <redacted>, so
+        the value appears nowhere in the report; `kind` names the
+        credential pattern matched. Only the deliberate opt-in
+        show_secrets=True returns the line exactly as written.
+        """
         pat = re.compile(
-            r"(?i)(password|passwd|pwd|token|secret|api[_-]?key)\s*[=:]\s*['\"][^'\"]{3,}")
+            r"(?i)(password|passwd|pwd|token|secret|api[_-]?key)"
+            r"\s*[=:]\s*(['\"])([^'\"]{3,})")
         out = []
         for i, line in enumerate(path.read_text().splitlines(), 1):
-            if pat.search(line):
-                out.append((i, line.strip()))
+            m = pat.search(line)
+            if not m:
+                continue
+            kind = m.group(1).lower().replace("-", "_")
+            if kind == "apikey":
+                kind = "api_key"
+            text = line.strip()
+            if not show_secrets:
+                lead = len(line) - len(line.lstrip())
+                start = m.start(3) - lead
+                end = m.end(3) - lead
+                text = text[:start] + "<redacted>" + text[end:]
+            out.append((i, kind, text))
         return out
 
     def main_guard(self, path: Path) -> dict:

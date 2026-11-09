@@ -43,8 +43,11 @@ def test_godfatherwiz_cli_status(capsys):
         godfatherwiz_lib_cli._dispatch()
 
     captured = capsys.readouterr()
-    assert "truthwiz reachable" in captured.out
-    assert "writewiz reachable" in captured.out
-    assert "pythonwiz reachable" in captured.out
-    assert "bootwiz reachable" in captured.out
-    assert "repairwiz reachable" in captured.out
+    assert "write_wizard reachable" in captured.out
+    assert "python_wizard reachable" in captured.out
+    # status probes the installed fleet only: citizens that are
+    # not installed (Pro's truthwiz, bootwiz, repairwiz) are
+    # never probed, so their names never appear in the output.
+    assert "truthwiz" not in captured.out
+    assert "bootwiz" not in captured.out
+    assert "repairwiz" not in captured.out

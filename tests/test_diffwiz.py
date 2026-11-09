@@ -6,10 +6,10 @@ from wiz_central_toolkit.diffwiz.lib.diff_wizard import DiffWizard
 
 def test_help_and_no_args(capsys):
     assert main(["--help"]) == 0
-    assert "usage: diffwiz" in capsys.readouterr().out
+    assert "usage: diff_wizard" in capsys.readouterr().out
 
     assert main([]) == 0
-    assert "usage: diffwiz" in capsys.readouterr().out
+    assert "usage: diff_wizard" in capsys.readouterr().out
 
 
 def test_files_same_and_different(tmp_path, capsys):

@@ -220,15 +220,20 @@ class ProfileManager:
         self.config_path = config_path or self.DEFAULT_CONFIG_PATH
         self.profiles: dict = {}
         self._loaded = False
+        self.yaml_available = True
         self._load()
 
     def _load(self) -> None:
-        """Attempt to load profiles from YAML."""
+        """Attempt to load profiles from YAML.
+
+        PyYAML is optional: without it, profiles silently stay empty.
+        The one place that says so out loud is the --profiles mode —
+        everywhere else the fallback is quiet by design.
+        """
         try:
             import yaml
         except ImportError:
-            console.print("[yellow]⚠ PyYAML not installed. "
-                          "Run: pip install pyyaml[/yellow]")
+            self.yaml_available = False
             return
 
         try:
@@ -905,7 +910,10 @@ if __name__ == "__main__":
                     sys.argv[2] if len(sys.argv) > 2 else "DEMO")
             elif cmd == "--profiles":
                 pm = ProfileManager()
-                if not pm.is_loaded:
+                if not pm.yaml_available:
+                    console.print("[dim]PyYAML not installed — banner profiles "
+                                  "are unavailable (pip install pyyaml to enable)[/dim]")
+                elif not pm.is_loaded:
                     console.print("[yellow]No config.yaml found.[/yellow]")
                     console.print("[dim]Create one with: "
                                   "python3 banner_engine.py --create-config[/dim]")
@@ -948,6 +956,19 @@ if __name__ == "__main__":
                         console.print()
 
                     engine.display_banner(text, "standard", "clean", auto_fit=True)
+            elif cmd == "--version":
+                _v = "unknown"
+                try:
+                    from importlib import metadata as _md
+                    for _n in ("wizard-central-toolkit", "wiz-central-toolkit"):
+                        try:
+                            _v = _md.version(_n)
+                            break
+                        except _md.PackageNotFoundError:
+                            continue
+                except Exception:
+                    pass
+                console.print(f"bannerwiz {_v}")
             elif cmd == "--help":
                 console.print("""
 [bold]ASCII Banner Engine v1.0 - Commands:[/bold]

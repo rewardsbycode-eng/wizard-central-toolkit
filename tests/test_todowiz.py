@@ -140,7 +140,7 @@ class TestCLI:
         rc = todowiz_main.main([])
         out = capsys.readouterr().out
         assert rc == 0
-        assert "usage: todowiz" in out
+        assert "usage: todo_wizard" in out
 
     def test_add_and_list(self, cli_env, capsys):
         rc = todowiz_main.main(["add", "buy", "milk"])

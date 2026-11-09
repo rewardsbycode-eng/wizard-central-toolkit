@@ -4,7 +4,7 @@ import sys
 
 from .lib.read_wizard import check_command, LAW_TEXT, ALLOW_VERBS, DENY_VERBS
 
-USAGE = """readwiz - read-only mode policy engine (verb gate)
+USAGE = """Read Wizard — read-only mode policy engine (verb gate)
 usage: readwiz check "<raw shell command>"
        readwiz verbs          dump the allow/deny tables
        readwiz law            print the READ LAW alone

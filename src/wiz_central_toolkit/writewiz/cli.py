@@ -26,29 +26,30 @@ from .write_wizard import (
     unprotect,
 )
 
-USAGE = """writewiz - the consent wall for file writes
-usage: writewiz propose <path>        stage content (reads stdin) in quarantine
-       writewiz preview <path>        gate + diff the staged draft vs disk
-       writewiz commit <path>         ask Governor consent, write, verify
-       writewiz pending               list quarantined drafts
-       writewiz law                   print the WRITE LAW alone
-       writewiz status <path>         draft state: bytes, age, target
-       writewiz diff <path>           disk vs draft diff alone
-       writewiz verify <path>         gate + verification, zero consent
-       writewiz explain <path>        would-commit verdict with reasons
-       writewiz discard <path>        burn a draft ('y'-gated, journaled)
-       writewiz guard                 gate sweep over every pending draft
-       writewiz audit                 quarantine census: drafts, orphans
-       writewiz ledger                full write journal
-       writewiz history <path>        journal filtered to one target
-       writewiz stats                 counts: staged, written, refused
-       writewiz protect <path>        forbid writes — absolute refusal
-       writewiz unprotect <path>      lift a protection (Governor only)
-       writewiz protected             list protected paths
-       writewiz backups               list pre-write safety copies
-       writewiz rollback <path>       restore from backup ('y'-gated)
-       writewiz purge-old <days>      burn drafts older than N days ('y'-gated)
-       writewiz law-digest            sha256 of WRITE LAW (drift detection)
+USAGE = """Write Wizard — the consent wall for file writes
+alias: writewiz
+usage: write_wizard propose <path>        stage content (reads stdin) in quarantine
+       write_wizard preview <path>        gate + diff the staged draft vs disk
+       write_wizard commit <path>         ask Governor consent, write, verify
+       write_wizard pending               list quarantined drafts
+       write_wizard law                   print the WRITE LAW alone
+       write_wizard status <path>         draft state: bytes, age, target
+       write_wizard diff <path>           disk vs draft diff alone
+       write_wizard verify <path>         gate + verification, zero consent
+       write_wizard explain <path>        would-commit verdict with reasons
+       write_wizard discard <path>        burn a draft ('y'-gated, journaled)
+       write_wizard guard                 gate sweep over every pending draft
+       write_wizard audit                 quarantine census: drafts, orphans
+       write_wizard ledger                full write journal
+       write_wizard history <path>        journal filtered to one target
+       write_wizard stats                 counts: staged, written, refused
+       write_wizard protect <path>        forbid writes — absolute refusal
+       write_wizard unprotect <path>      lift a protection (Governor only)
+       write_wizard protected             list protected paths
+       write_wizard backups               list pre-write safety copies
+       write_wizard rollback <path>       restore from backup ('y'-gated)
+       write_wizard purge-old <days>      burn drafts older than N days ('y'-gated)
+       write_wizard law-digest            sha256 of WRITE LAW (drift detection)
 exit codes: 0 ok | 1 refused/failed | 2 usage error"""
 
 CMDS = ("propose", "preview", "commit", "pending", "law", "status", "diff",
@@ -72,7 +73,7 @@ def main(argv=None):
     from pathlib import Path
 
     args = sys.argv[1:] if argv is None else list(argv)
-    if args and args[0] in ("-h", "--help"):
+    if args and args[0] in ("-h", "--help", "help"):
         print(USAGE)
         return 0
     if not args or args[0] not in CMDS:

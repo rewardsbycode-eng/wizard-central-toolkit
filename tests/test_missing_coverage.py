@@ -9,6 +9,15 @@ def test_godfatherwiz_main_execution_with_mocked_ai(monkeypatch, capsys):
     """Test godfatherwiz CLI execution with dynamic patching based on available module attributes."""
     monkeypatch.setattr(sys, "argv", ["godfatherwiz"])
 
+    # R4 contract: plain text reaches the oracle only when a model
+    # seat is actually serving — seat one deterministically. (The
+    # provider layer made the REPL resolve a (provider, model)
+    # seat via seat_for; the patch target moved with it.)
+    monkeypatch.setattr(
+        "wiz_central_toolkit.godfatherwiz.lib.cli.seat_for",
+        lambda *a, **k: ("ollama", "stub-model"),
+    )
+
     # Provide mock stdin inputs to satisfy input() calls and cleanly terminate the REPL loop
     input_responses = iter(["give me advice", "/quit"])
     monkeypatch.setattr("builtins.input", lambda prompt="": next(input_responses))

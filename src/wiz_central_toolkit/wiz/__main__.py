@@ -1,4 +1,8 @@
-"""Top-level dispatcher for Wizard Central Toolkit."""
+"""The Wizarding Router — top-level dispatcher for Wizard Central Toolkit.
+
+The router's full name is the Wizarding Router (AVS, 2026-11-09);
+its command is `wiz`, and the command does not change.
+"""
 
 from __future__ import annotations
 
@@ -8,20 +12,26 @@ import io
 import json
 import sys
 
-from wiz_central_toolkit.tools_registry import TOOLS, get_tool_main
+from wiz_central_toolkit.tools_registry import (
+    ALIAS_OF,
+    CITIZENS,
+    full_form,
+    get_tool_main,
+)
 
+# Router stem aliases — the shortest typing for each citizen.
 ALIASES = {
-    "banner": "bannerwiz",
-    "codeguard": "codeguardwiz",
-    "debug": "debugwiz",
-    "diff": "diffwiz",
-    "json": "jsonwiz",
-    "python": "pythonwiz",
-    "read": "readwiz",
-    "rust": "rustwiz",
-    "tmux": "tmuxwiz",
-    "todo": "todowiz",
-    "write": "writewiz",
+    "banner": "banner_wizard",
+    "codeguard": "codeguard_wizard",
+    "debug": "debug_wizard",
+    "diff": "diff_wizard",
+    "json": "json_wizard",
+    "python": "python_wizard",
+    "read": "read_wizard",
+    "rust": "rust_wizard",
+    "tmux": "tmux_wizard",
+    "todo": "todo_wizard",
+    "write": "write_wizard",
 }
 
 
@@ -35,6 +45,7 @@ def package_version() -> str:
 
 
 def print_help() -> None:
+    print("The Wizarding Router — the fleet's dispatcher")
     print("usage: wiz [--json] <tool> [args...]")
     print()
     print("options:")
@@ -42,15 +53,23 @@ def print_help() -> None:
     print("  --version        show the installed version")
     print("  --json           emit command output as JSON")
     print()
-    print("available tools: " + ", ".join(sorted(TOOLS)))
+    print("available tools: " + ", ".join(sorted(CITIZENS)))
     print()
-    print("aliases:")
+    print("aliases (short forms — the same wizards, shorter typing):")
+    for alias, tool in sorted(ALIAS_OF.items()):
+        print(f"  {alias:<12} alias of {tool}")
+    print()
+    print("router aliases:")
     for alias, tool in sorted(ALIASES.items()):
         print(f"  {alias:<12} {tool}")
 
 
 def normalize_tool_name(name: str) -> str:
-    return ALIASES.get(name, name)
+    """Canonical name-command for a tool reference: a router stem,
+    a short alias, or the full form itself all name the full form."""
+    if name in ALIASES:
+        return ALIASES[name]
+    return full_form(name) or name
 
 
 def run_json(tool_name: str, tool_args: list[str], tool_main) -> int:
@@ -108,7 +127,7 @@ def main(argv=None) -> int:
 
     if tool_main is None:
         print(f"unknown tool: {requested_name!r}", file=sys.stderr)
-        print("available tools: " + ", ".join(sorted(TOOLS)), file=sys.stderr)
+        print("available tools: " + ", ".join(sorted(CITIZENS)), file=sys.stderr)
         return 2
 
     if json_mode:

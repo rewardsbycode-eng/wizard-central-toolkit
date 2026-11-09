@@ -87,8 +87,18 @@ def test_todos_of(wiz, tmp_path):
 
 
 def test_secrets_scan(wiz, tmp_path):
+    # Contract changed by AVS's F2 ruling (2026-11-09): rows are
+    # (lineno, kind, text) and the value is redacted by default.
     p = _write(tmp_path, "s.py", 'password = "hunter2xyz"\nx = 1\n')
-    assert wiz.secrets_scan(p) == [(1, 'password = "hunter2xyz"')]
+    rows = wiz.secrets_scan(p)
+    assert rows == [(1, "password", 'password = "<redacted>"')]
+    assert "hunter2xyz" not in rows[0][2]
+
+
+def test_secrets_scan_show_secrets_opts_in(wiz, tmp_path):
+    p = _write(tmp_path, "s.py", 'password = "hunter2xyz"\nx = 1\n')
+    rows = wiz.secrets_scan(p, show_secrets=True)
+    assert rows == [(1, "password", 'password = "hunter2xyz"')]
 
 
 def test_bare_excepts(wiz, tmp_path):

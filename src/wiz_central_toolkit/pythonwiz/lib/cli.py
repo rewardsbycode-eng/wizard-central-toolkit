@@ -4,8 +4,9 @@ import json
 from pathlib import Path
 from .python_wizard import PythonWizard
 
-HELP = """pythonwiz - standalone Python doctor (parse only, never executes)
-usage: pythonwiz <command> <target>
+HELP = """Python Wizard — standalone Python doctor (parse only, never executes)
+alias: pythonwiz
+usage: python_wizard <command> <target>
 
   check <file|dir>     syntax validation (the fleet gate)
   entry <file>         shebang + interpreter validation
@@ -22,7 +23,8 @@ usage: pythonwiz <command> <target>
   callmap <file>       who-calls-whom per function
   longest <file>       functions ranked by length
   excepts <file>       bare/broad except handlers + swallows
-  secrets <file>       hardcoded credential patterns
+  secrets <file>       hardcoded credential patterns (values redacted;
+                       --show-secrets prints them — a deliberate opt-in)
   mainguard <file>     has __main__ guard?
   globals <file>       module-level mutable state audit
   magic <file>         suspicious numeric literals
@@ -39,7 +41,7 @@ def _file(arg: str):
 
 def main() -> int:
     args = sys.argv[1:]
-    if not args or args[0] in ("-h", "--help"):
+    if not args or args[0] in ("-h", "--help", "help"):
         print(HELP)
         return 0
 
@@ -136,6 +138,12 @@ def main() -> int:
               "docstrings", "explain", "deps", "callmap", "longest",
               "excepts", "secrets", "mainguard", "globals", "magic", "score")
     if cmd in single:
+        show_secrets = False
+        if cmd == "secrets" and "--show-secrets" in args[1:]:
+            # Deliberate opt-in (AVS ruling, 2026-11-09): the flag is
+            # stripped wherever it sits so the file stays at args[1].
+            show_secrets = True
+            args = [args[0]] + [a for a in args[1:] if a != "--show-secrets"]
         if len(args) < 2:
             print("out of scope")
             return 2
@@ -202,9 +210,15 @@ def main() -> int:
                   or "[OK] no bare/broad excepts")
             return 1 if rows else 0
         if cmd == "secrets":
-            rows = wiz.secrets_scan(p)
-            print("\n".join(f"L{ln:4d} {line}" for ln, line in rows)
-                  or "[OK] no credential patterns found")
+            rows = wiz.secrets_scan(p, show_secrets=show_secrets)
+            if show_secrets:
+                # Exactly the pre-ruling full-line behaviour.
+                print("\n".join(f"L{ln:4d} {line}" for ln, _kind, line in rows)
+                      or "[OK] no credential patterns found")
+            else:
+                print("\n".join(f"L{ln:4d} [{kind}] {line}"
+                                for ln, kind, line in rows)
+                      or "[OK] no credential patterns found")
             return 1 if rows else 0
         if cmd == "mainguard":
             r = wiz.main_guard(p)

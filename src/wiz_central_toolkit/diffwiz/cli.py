@@ -5,8 +5,8 @@ from .lib.diff_wizard import DiffWizard
 
 def main() -> int:
     args = sys.argv[1:]
-    if not args or args[0] in ("-h", "--help"):
-        print("diffwiz - standalone change-truth doctor")
+    if not args or args[0] in ("-h", "--help", "help"):
+        print("Diff Wizard — standalone change-truth doctor")
         print("usage: diffwiz <command> [args]")
         print("  files <a> <b>             unified diff of two files")
         print("  dirs <a> <b>              compare directory trees")

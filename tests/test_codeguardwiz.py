@@ -236,9 +236,16 @@ def test_cli_roster(monkeypatch, capsys, ollama):
 
 
 def test_cli_roster_empty(monkeypatch, capsys, ollama):
+    """Seatless roster (R1): the static engine is always available, so
+    roster reports both engines instead of failing — the model seat is
+    listed as none-served, with the static rule roster in full."""
     ollama["tags_fail"] = True
-    assert _run(monkeypatch, "roster") == 1
-    assert "[FAIL] daemon unreachable" in capsys.readouterr().out
+    assert _run(monkeypatch, "roster") == 0
+    out = capsys.readouterr().out
+    assert "engine: static (built-in rules)" in out
+    assert "[OK] static (built-in rules)" in out
+    assert "model seat — none served" in out
+    assert "CG001" in out and "CG009" in out
 
 
 def test_cli_lang_ok(monkeypatch, capsys, tmp_path):
@@ -287,3 +294,26 @@ def test_cli_scan_ok(monkeypatch, capsys, tmp_path, ollama):
     out = capsys.readouterr().out
     assert "scanned 1 files" in out
     assert "HIGH=1" in out
+
+
+# ---------- R1: engine choice when a seat IS served ----------
+
+def test_cli_audit_default_engine_is_the_seat(monkeypatch, capsys, tmp_path, ollama):
+    monkeypatch.setenv("CODEGUARD_AUDIT_MODEL", "m")
+    ollama["reply"] = GOOD_AUDIT
+    p = _file(tmp_path, "a.py", "x = 1\n")
+    assert _run(monkeypatch, "audit", str(p)) == 0
+    out = capsys.readouterr().out
+    assert "engine: model seat" in out
+    assert "Bad thing" in out
+
+
+def test_cli_audit_engine_static_overrides_a_served_seat(monkeypatch, capsys, tmp_path, ollama):
+    monkeypatch.setenv("CODEGUARD_AUDIT_MODEL", "m")
+    ollama["reply"] = GOOD_AUDIT
+    p = _file(tmp_path, "a.py", "password = 'hunter2'\n")
+    assert _run(monkeypatch, "audit", str(p), "--engine", "static") == 1
+    out = capsys.readouterr().out
+    assert "engine: static (built-in rules)" in out
+    assert "CG002" in out
+    assert "Bad thing" not in out  # the model's reply was never used

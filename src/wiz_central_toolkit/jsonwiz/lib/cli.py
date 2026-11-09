@@ -15,9 +15,10 @@ def _read_source(arg: str):
 
 def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else list(argv)
-    if not args or args[0] in ("-h", "--help"):
-        print("jsonwiz - standalone JSON doctor")
-        print("usage: jsonwiz <command> [args]")
+    if not args or args[0] in ("-h", "--help", "help"):
+        print("JSON Wizard — standalone JSON doctor")
+        print("alias: jsonwiz")
+        print("usage: json_wizard <command> [args]")
         print("  validate <file|->      check JSON validity with line/col on failure")
         print("  pretty <file|->        pretty-print to stdout")
         print("  compact <file|->       minify to one line")

@@ -2,7 +2,9 @@
 
 import ast
 import builtins
+import datetime as dt
 import json
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -10,12 +12,12 @@ HOME = Path.home()
 BANK = HOME / ".debug-wizard"
 IGNORE_LIST = BANK / "ignored.json"
 
-DEBUG_LAW = """DEBUG LAW (debug-wizard, the diagnosis oracle)
+DEBUG_LAW = """DEBUG LAW (Debug Wizard, the diagnosis oracle)
 1. Diagnose freely: autopsy tracebacks, classify errors, count hotspots, report facts.
-2. Never mutate: no writes, no patches, no fixes applied — only proposals staged for writewiz.
-3. Consent wall: any fix suggestion goes through writewiz propose; Governor consents.
+2. Never mutate: no writes, no patches, no fixes applied — only proposals staged for the Write Wizard.
+3. Consent wall: any fix suggestion goes through write_wizard propose; Governor consents.
 4. Plain verdicts: [OK]/[FAIL]/out of scope, exit 0/1/2, no tracebacks.
-5. Truth first: run pythonwiz check or python -m py_compile before analysis.
+5. Truth first: run python_wizard check or python -m py_compile before analysis.
 6. Ignore list amends only by Governor decree; protected paths stay ignored.
 """
 
@@ -154,20 +156,112 @@ def _signature_issues(file: Path) -> list[dict]:
                           "message": f"{func_name} def={defs[func_name]['args']} args, call={call_args}"})
     return issues
 
+_TB_FRAME = re.compile(
+    r'^\s*File "(?P<file>.+)", line (?P<line>\d+)(?:, in (?P<func>.*))?$')
+_TB_EXC = re.compile(
+    r"^(?P<type>[A-Za-z_][\w.]*)\s*(?::\s*(?P<msg>.*))?$")
+
+
+def _parse_traceback(text: str) -> dict | None:
+    """Parse a real Python traceback pasted/saved in a file, or None.
+
+    A traceback is its header line, at least one File frame, and a
+    final exception line. Anything else is not a traceback and the
+    caller falls back to the compile check.
+    """
+    lines = text.splitlines()
+    if not any(l.strip().startswith("Traceback (most recent call last)")
+               for l in lines):
+        return None
+    frames = []
+    for l in lines:
+        m = _TB_FRAME.match(l)
+        if m:
+            frames.append({"file": m.group("file"),
+                           "line": int(m.group("line")),
+                           "func": (m.group("func") or "").strip()})
+    exc = None
+    for l in reversed(lines):
+        s = l.strip()
+        if not s or s.startswith("File ") or s.startswith("Traceback"):
+            continue
+        m = _TB_EXC.match(s)
+        if m and (m.group("type")[0].isupper() or "." in m.group("type")):
+            exc = {"type": m.group("type"), "message": m.group("msg") or ""}
+        break  # only the last content line can be the exception line
+    if not frames or exc is None:
+        return None
+    return {"frames": frames, "type": exc["type"], "message": exc["message"]}
+
+
+def _read_text(file: Path) -> str:
+    try:
+        return Path(file).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def _frame_home(file: str) -> str:
+    """'library' for stdlib / site-packages frames, else 'project'."""
+    import sysconfig
+    f = file.replace("\\", "/")
+    roots = [sysconfig.get_path("stdlib"), sysconfig.get_path("purelib"),
+             sysconfig.get_path("platlib")]
+    if "/site-packages/" in f:
+        return "library"
+    if any(r and f.startswith(r.replace("\\", "/")) for r in roots):
+        return "library"
+    return "project"
+
+
+def stack_digest(text: str) -> dict | None:
+    """Digest a saved traceback: exception, frame chain, deepest frames.
+
+    Returns None when the text is not a traceback. The deepest
+    project frame is the last frame outside the library — where the
+    Governor's own code was standing when it fell. A frame repeated
+    three or more times is flagged as suspected recursion.
+    """
+    tb = _parse_traceback(text)
+    if tb is None:
+        return None
+    frames = [{**fr, "home": _frame_home(fr["file"])} for fr in tb["frames"]]
+    counts = Counter((f["file"], f["line"], f["func"]) for f in frames)
+    repeated = [(k, c) for k, c in counts.most_common() if c >= 3]
+    project = [f for f in frames if f["home"] == "project"]
+    return {"type": tb["type"], "message": tb["message"],
+            "frames": frames,
+            "deepest": frames[-1],
+            "deepest_project": project[-1] if project else None,
+            "repeated": repeated}
+
+
 def trace(file: Path) -> dict:
-    """Autopsy one file's compilation errors."""
+    """Autopsy one file: a saved traceback if it is one, else compilation errors."""
+    tb = _parse_traceback(_read_text(file))
+    if tb is not None:
+        last = tb["frames"][-1]
+        return {"file": str(file), "ok": False, "traceback": tb,
+                "errors": [{"line": last["line"], "type": tb["type"],
+                            "message": tb["message"], "col": 0, "snippet": ""}]}
     errors = _compile_errors(file)
     return {"file": str(file), "errors": errors, "ok": len(errors) == 0}
 
 def classify_file(file: Path) -> dict:
     """Error type breakdown."""
+    tb = _parse_traceback(_read_text(file))
+    if tb is not None:
+        return {"file": str(file), "classification": {tb["type"]: 1}, "total": 1}
     errors = _compile_errors(file)
     return {"file": str(file), "classification": _classify(errors), "total": len(errors)}
 
 def locate(root: Path, pattern: str) -> list[str]:
-    """Find files with given error pattern."""
+    """Find files whose contents contain the pattern, or whose errors match it."""
     hits = []
     for f in _walk_py_files(root):
+        if pattern in _read_text(f):
+            hits.append(str(f))
+            continue
         err = trace(f)
         for e in err.get("errors", []):
             if pattern.lower() in e["message"].lower() or pattern in e["type"]:
@@ -220,6 +314,17 @@ def signatures(file: Path) -> list[dict]:
 
 def suggest_fix(file: Path) -> str:
     """Human-readable fix suggestion (no AI — heuristic)."""
+    tb = _parse_traceback(_read_text(file))
+    if tb is not None:
+        last = tb["frames"][-1]
+        lines = [f"[TRACEBACK] {file}"]
+        for fr in tb["frames"]:
+            lines.append(f"  File \"{fr['file']}\", line {fr['line']}, in {fr['func']}")
+        lines.append(f"  {tb['type']}: {tb['message']}" if tb["message"]
+                     else f"  {tb['type']}")
+        lines.append(f"raised at {last['file']}:{last['line']} in {last['func']} "
+                     f"(innermost of {len(tb['frames'])} frame(s)) — start there.")
+        return "\n".join(lines)
     errs = trace(file)
     if errs["ok"]:
         return f"[OK] {file}: no compilation errors"
@@ -248,20 +353,12 @@ def audit_dir(root: Path) -> dict:
 
 def report_json(root: Path) -> str:
     """JSON report for CI/CD."""
-    data = {"timestamp": "now", "root": str(root),
+    data = {"timestamp": dt.datetime.now().isoformat(timespec="seconds"), "root": str(root),
             "audit": audit_dir(root),
             "hotspots": [{"file": f, "errors": e} for f, e in hotspot(root)]}
     return json.dumps(data, indent=2)
 
 def stats_fleet() -> dict:
-    """Aggregate stats across multiple common paths."""
-    paths = ["~/tools", "~/wizard_central", "~/BASE", "~/micro_runners"]
-    results = {}
-    for p in paths:
-        root = Path(p).expanduser()
-        if not root.exists():
-            results[p] = {"files_checked": 0, "healthy": 0, "unhealthy": 0,
-                          "total_errors": 0, "health_pct": "n/a (absent)"}
-            continue
-        results[p] = audit_dir(root)
-    return results
+    """Fleet statistics derivable anywhere: the current directory's error census."""
+    root = Path.cwd()
+    return {str(root): audit_dir(root)}

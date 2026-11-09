@@ -15,41 +15,109 @@ from .debug_wizard import (
     names,
     report_json,
     signatures,
+    stack_digest,
     stats_fleet,
     suggest_fix,
     timeline,
     trace,
 )
 
-USAGE = """debugwiz - the diagnosis oracle
-usage: debugwiz law                     print the DEBUG LAW alone
-       debugwiz trace <file>            traceback autopsy
-       debugwiz locate <dir> <pattern>  find files with error pattern
-       debugwiz classify <file>         error type breakdown
-       debugwiz stack <file>            stack/recursion analysis (stub)
-       debugwiz count <dir>             errors by category
-       debugwiz hotspot <dir>           files with most errors
-       debugwiz timeline <dir>          error frequency by mtime
-       debugwiz imports <file>          missing import detection
-       debugwiz names <file>            undefined name detection
-       debugwiz signatures <file>       signature mismatch detection
-       debugwiz suggest <file>          heuristic fix suggestion
-       debugwiz propose <file>          stage fix via writewiz
-       debugwiz preview <file>          show staged proposal
-       debugwiz explain <file>          human-readable explanation
-       debugwiz audit <dir>             full error census
-       debugwiz report <dir>            JSON report for CI/CD
-       debugwiz log <dir>               write error log (staged via writewiz)
-       debugwiz ignore <path>           add to ignore list
-       debugwiz ignored                 show ignored paths
-       debugwiz stats                   fleet-wide statistics
-       debugwiz versions                law/version drift detection
+USAGE = """Debug Wizard — the diagnosis oracle
+alias: debugwiz
+usage: debug_wizard law                     print the DEBUG LAW alone
+       debug_wizard trace <file>            traceback autopsy
+       debug_wizard locate <dir> <pattern>  find files with error pattern
+       debug_wizard classify <file>         error type breakdown
+       debug_wizard stack [file]            stack digest of a traceback (file or stdin)
+       debug_wizard count <dir>             errors by category
+       debug_wizard hotspot <dir>           files with most errors
+       debug_wizard timeline <dir>          error frequency by mtime
+       debug_wizard imports <file>          missing import detection
+       debug_wizard names <file>            undefined name detection
+       debug_wizard signatures <file>       signature mismatch detection
+       debug_wizard suggest <file>          heuristic fix suggestion
+       debug_wizard propose <file>          stage fix via write_wizard
+       debug_wizard preview <file>          show staged proposal
+       debug_wizard explain <file>          human-readable explanation
+       debug_wizard audit <dir>             full error census
+       debug_wizard report <dir>            JSON report for CI/CD
+       debug_wizard log <dir>               write error log (staged via write_wizard)
+       debug_wizard ignore <path>           add to ignore list
+       debug_wizard ignored                 show ignored paths
+       debug_wizard stats                   error census of the current directory
+       debug_wizard versions                law/version drift detection
 exit codes: 0 ok | 1 failed | 2 out of scope"""
 
 CMDS = ("law", "trace", "locate", "classify", "stack", "count", "hotspot",
         "timeline", "imports", "names", "signatures", "suggest", "propose",
         "preview", "explain", "audit", "report", "log", "ignore", "ignored",
         "stats", "versions")
+
+
+def _fix_target(p: Path) -> Path:
+    """Where a fix proposal for file p would land, if the Governor commits it."""
+    return Path.home() / ".debug-wizard" / f"fix_{p.stem}.txt"
+
+
+def _stage_via_writewiz(target: Path, content: str):
+    """Stage content through writewiz, the fleet sibling in this same package.
+
+    Import lane first (writewiz ships inside this toolkit); fall back to
+    the resolved writewiz executable — the same two lanes the fleet
+    itself uses. Staging only: the commit keystroke stays the Governor's.
+    Returns (ok, detail).
+    """
+    try:
+        from wiz_central_toolkit.writewiz.write_wizard import propose as _propose
+        draft, _meta, t = _propose(str(target), content)
+        return True, f"{draft.name} -> {t} ({len(content)} chars quarantined)"
+    except ImportError:
+        pass
+    import shutil
+    import subprocess
+    exe = shutil.which("write_wizard") or shutil.which("writewiz")
+    if exe is None:
+        for home_name in ("write_wizard", "writewiz"):
+            home_exe = Path.home() / "bin" / home_name
+            if home_exe.exists():
+                exe = str(home_exe)
+                break
+    if exe is None:
+        return False, "write_wizard not found (package import or PATH)"
+    try:
+        r = subprocess.run([exe, "propose", str(target)], input=content,
+                           capture_output=True, text=True, timeout=60)
+    except OSError as e:
+        return False, f"write_wizard unreachable: {e}"
+    if r.returncode != 0:
+        return False, (r.stdout + r.stderr).strip() or "write_wizard propose failed"
+    return True, (r.stdout.strip() or f"staged -> {target}")
+
+
+def _preview_via_writewiz(target: Path):
+    """(report_lines, hard_fail) for the draft staged for target, or None."""
+    try:
+        from wiz_central_toolkit.writewiz import write_wizard as _ww
+        draft, _meta = _ww._draft_path(Path(target))
+        if not draft.exists():
+            return None
+        return _ww.gate_and_diff(draft, Path(target))
+    except ImportError:
+        pass
+    import shutil
+    import subprocess
+    exe = shutil.which("write_wizard") or shutil.which("writewiz")
+    if exe is None:
+        return None
+    try:
+        r = subprocess.run([exe, "preview", str(target)],
+                           capture_output=True, text=True, timeout=60)
+    except OSError:
+        return None
+    out = (r.stdout + r.stderr).strip()
+    if "no quarantined draft" in out:
+        return None
+    return out.splitlines(), r.returncode != 0
 
 
 def main(argv=None) -> int:
@@ -62,7 +130,7 @@ def main(argv=None) -> int:
 
 def _dispatch(argv=None):
     args = list(sys.argv[1:] if argv is None else argv)
-    if args and args[0] in ("-h", "--help"):
+    if args and args[0] in ("-h", "--help", "help"):
         print(USAGE)
         return 0
     if not args:
@@ -121,6 +189,44 @@ def _dispatch(argv=None):
             print(f"[MATCH] {f}")
         return 1
 
+    # --- stack: a traceback digest; file argument or stdin ---
+    if cmd == "stack":
+        if len(args) >= 2 and args[1] != "-":
+            src = Path(args[1]).expanduser()
+            try:
+                text = src.read_text(encoding="utf-8", errors="replace")
+            except OSError as e:
+                print(f"[FAIL] cannot read {src}: {e}")
+                return 1
+            label = str(src)
+        else:
+            text = sys.stdin.read()
+            label = "stdin"
+        d = stack_digest(text)
+        if d is None:
+            print(f"[FAIL] no traceback found in {label}")
+            return 1
+        print(f"[OK] stack digest — {label}")
+        exc = d["type"] + (f": {d['message']}" if d["message"] else "")
+        print(f"  exception: {exc}")
+        print(f"  frames: {len(d['frames'])}")
+        for fr in d["frames"]:
+            print(f"    File \"{fr['file']}\", line {fr['line']}, "
+                  f"in {fr['func']} ({fr['home']})")
+        deep = d["deepest"]
+        print(f"  deepest frame: File \"{deep['file']}\", "
+              f"line {deep['line']}, in {deep['func']}")
+        dp = d["deepest_project"]
+        if dp is not None:
+            print(f"  deepest project frame: File \"{dp['file']}\", "
+                  f"line {dp['line']}, in {dp['func']}")
+        else:
+            print("  deepest project frame: none — every frame is library code")
+        for (ff, ln, fn), c in d["repeated"]:
+            print(f"  [RECURSION?] frame repeats {c} times: "
+                  f"File \"{ff}\", line {ln}, in {fn}")
+        return 0
+
     # --- path-taking commands ---
     if len(args) < 2:
         print(f"[FAIL] {cmd} requires a path")
@@ -132,6 +238,11 @@ def _dispatch(argv=None):
         if r["ok"]:
             print(f"[OK] {p}: no errors")
             return 0
+        tb = r.get("traceback")
+        if tb:
+            print(f"[TRACE] {p}: {len(tb['frames'])} frame(s)")
+            for fr in tb["frames"]:
+                print(f"  File \"{fr['file']}\", line {fr['line']}, in {fr['func']}")
         for e in r["errors"]:
             print(f"[ERR] line {e['line']}: {e['type']} — {e['message']}")
         return 1
@@ -201,21 +312,45 @@ def _dispatch(argv=None):
         print(report_json(str(p)))
         return 0
     if cmd == "log":
-        # writewiz is not yet ported in this toolkit. Deliberately refuse
-        # rather than risk resolving a same-named binary on PATH from an
-        # unrelated project (this happened during porting — see commit history).
-        print("[FAIL] 'log' requires writewiz, which is not yet available in this toolkit")
-        return 1
-    if cmd == "stack":
-        print("(stack analysis not implemented — stub for future)")
+        r = audit_dir(p)
+        lines = [f"debug_wizard error log — {p}",
+                 f"files checked: {r['files_checked']}",
+                 f"healthy: {r['healthy']}  unhealthy: {r['unhealthy']}  "
+                 f"total errors: {r['total_errors']}"]
+        for f, cnt in hotspot(p):
+            lines.append(f"[HOT] {cnt} errors  {f}")
+            for e in trace(Path(f))["errors"]:
+                lines.append(f"  line {e['line']}: {e['type']} — {e['message']}")
+        target = (p / "debug-error-log.txt") if p.is_dir() \
+            else p.with_name(p.stem + "-error-log.txt")
+        ok, detail = _stage_via_writewiz(target, "\n".join(lines) + "\n")
+        if not ok:
+            print(f"[FAIL] 'log' could not stage via write_wizard: {detail}")
+            return 1
+        print(f"[STAGED] error log for {p} — {detail}")
+        print(f"to write it: write_wizard commit {target}   # your keystroke, Governor")
         return 0
     if cmd == "propose":
         content = suggest_fix(p)
-        print(f"[STAGED] echo '{content[:500]}' | writewiz propose ~/.debug-wizard/fix_{p.stem}.txt")
+        if not content.endswith("\n"):
+            content += "\n"
+        target = _fix_target(p)
+        ok, detail = _stage_via_writewiz(target, content)
+        if not ok:
+            print(f"[FAIL] propose could not stage via write_wizard: {detail}")
+            return 1
+        print(f"[STAGED] fix proposal for {p} — {detail}")
+        print(f"preview it: debug_wizard preview {p}")
         return 0
     if cmd == "preview":
-        print("(no staged proposal — use debugwiz propose first)")
-        return 0
+        got = _preview_via_writewiz(_fix_target(p))
+        if got is None:
+            print("(no staged proposal — use debugwiz propose first)")
+            return 0
+        report, hard_fail = got
+        for line in report:
+            print(line)
+        return 1 if hard_fail else 0
 
     print("out of scope")
     return 2

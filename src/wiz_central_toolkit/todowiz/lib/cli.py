@@ -5,9 +5,10 @@ from .todo_wizard import TodoWizard
 
 def main() -> int:
     args = sys.argv[1:]
-    if not args or args[0] in ("-h", "--help"):
-        print("todowiz - standalone todo wizard")
-        print("usage: todowiz <command> [args]")
+    if not args or args[0] in ("-h", "--help", "help"):
+        print("Todo Wizard — standalone todo wizard")
+        print("alias: todowiz")
+        print("usage: todo_wizard <command> [args]")
         print("  add <text>            add a task (default priority normal)")
         print("  list                  list all tasks")
         print("  done <id>            complete a task")

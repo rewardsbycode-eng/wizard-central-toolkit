@@ -15,7 +15,7 @@ def test_todowiz_cli_help(capsys):
     """Test todowiz help message output."""
     with patch.object(sys, "argv", ["todowiz", "--help"]):
         assert main() == 0
-        assert "usage: todowiz" in capsys.readouterr().out
+        assert "usage: todo_wizard" in capsys.readouterr().out
 
 
 def test_todowiz_cli_list_tasks(capsys):

@@ -1,4 +1,5 @@
 """Integration tests for all wiz tools using subprocess."""
+import shutil
 import subprocess
 
 
@@ -131,7 +132,14 @@ class TestRustwiz:
         (src / "main.rs").write_text("fn main() {}\n")
 
         result = run_wiz("rustwiz", "check", project)
-        assert result.returncode != 2
+        if shutil.which("rustc") is None:
+            # No Rust toolchain on this machine: the wizard says so
+            # plainly and exits 2 (out of scope) — never a traceback
+            # and never a crash exit code.
+            assert result.returncode == 2
+            assert "rustc not found" in result.stdout
+        else:
+            assert result.returncode != 2
 
 
 class TestReadwiz:

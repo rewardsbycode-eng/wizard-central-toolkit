@@ -4,16 +4,17 @@ import sys
 
 from .read_wizard import check_command, LAW_TEXT, ALLOW_VERBS, DENY_VERBS
 
-USAGE = """readwiz - read-only mode policy engine (verb gate)
-usage: readwiz check "<raw shell command>"
-       readwiz verbs          dump the allow/deny tables
-       readwiz law            print the READ LAW alone
+USAGE = """Read Wizard — read-only mode policy engine (verb gate)
+alias: readwiz
+usage: read_wizard check "<raw shell command>"
+       read_wizard verbs          dump the allow/deny tables
+       read_wizard law            print the READ LAW alone
 verdicts: ALLOW / DENIED | exit 0 = allow, 1 = denied, 2 = usage error"""
 
 
 def main():
     args = sys.argv[1:]
-    if args and args[0] in ("-h", "--help"):
+    if args and args[0] in ("-h", "--help", "help"):
         print(USAGE)
         return 0
     if not args or args[0] not in ("check", "verbs", "law"):
@@ -35,7 +36,7 @@ def main():
 
     # check mode
     if len(args) < 2:
-        print("[FAIL] readwiz check requires a quoted command string")
+        print("[FAIL] read_wizard check requires a quoted command string")
         return 2
 
     verdict, reason = check_command(" ".join(args[1:]))

@@ -110,8 +110,8 @@ def check_command(raw):
 
 # ---------------- charter text ----------------
 
-LAW_TEXT = """READ LAW (read-wizard, the verb gate)
-1. readwiz judges; it never executes. REPLs bind it as policy engine.
+LAW_TEXT = """READ LAW (Read Wizard, the verb gate)
+1. The Read Wizard judges; it never executes. REPLs bind it as policy engine.
 2. ALLOW means read-only: observation, search, fleet read-only citizens.
 3. Redirection (>, >>), substitution ($(), `) and every write verb: DENIED.
 4. Unknown verbs default DENIED — absence from the table is not permission.

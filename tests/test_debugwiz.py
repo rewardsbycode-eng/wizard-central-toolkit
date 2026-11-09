@@ -139,7 +139,7 @@ class TestCLI:
         rc = debugwiz_main.main([])
         out = capsys.readouterr().out
         assert rc == 0
-        assert "usage: debugwiz" in out
+        assert "usage: debug_wizard" in out
 
     def test_law(self, capsys):
         rc = debugwiz_main.main(["law"])
@@ -234,12 +234,17 @@ class TestCLI:
         assert rc == 0
         assert '"audit"' in out
 
-    def test_log_fails_cleanly_no_writewiz(self, tmp_path, capsys):
-        """Regression test: log must never shell out to a same-named PATH binary."""
+    def test_log_stages_via_writewiz(self, tmp_path, capsys, monkeypatch):
+        """log stages the error log through writewiz — the package's
+        own sibling, reached by import. It must never shell out to a
+        same-named PATH binary, and it never refuses a wizard that
+        ships in this toolkit."""
+        monkeypatch.setenv("HOME", str(tmp_path))
         rc = debugwiz_main.main(["log", str(tmp_path)])
         out = capsys.readouterr().out
-        assert rc == 1
-        assert "not yet available" in out
+        assert rc == 0
+        assert "[STAGED]" in out
+        assert "not yet available" not in out
 
     def test_ignore_and_ignored(self, tmp_path, capsys):
         rc = debugwiz_main.main(["ignore", str(tmp_path)])
@@ -252,12 +257,59 @@ class TestCLI:
         assert rc == 0
         assert str(tmp_path) in out
 
-    def test_stack_stub(self, tmp_path, capsys):
-        f = _write(tmp_path, "good.py", "print(1)")
+    def test_stack_digest_real_traceback(self, tmp_path, capsys):
+        """R7: stack digests a real traceback — exception, frame
+        chain, and the deepest project frame called out."""
+        proj = tmp_path / "app.py"
+        tb = (
+            "Traceback (most recent call last):\n"
+            f'  File "{proj}", line 10, in main\n'
+            "    run()\n"
+            '  File "/usr/lib/python3.12/json/__init__.py", line 346, in loads\n'
+            "    return _default_decoder.decode(s)\n"
+            f'  File "{proj}", line 42, in run\n'
+            "    boom()\n"
+            "ValueError: bad payload\n"
+        )
+        f = _write(tmp_path, "tb.txt", tb)
         rc = debugwiz_main.main(["stack", str(f)])
         out = capsys.readouterr().out
         assert rc == 0
-        assert "not implemented" in out
+        assert "[OK] stack digest" in out
+        assert "exception: ValueError: bad payload" in out
+        assert "frames: 3" in out
+        assert f'deepest project frame: File "{proj}", line 42, in run' in out
+
+    def test_stack_digest_recursion_flag(self, tmp_path, capsys):
+        frame = '  File "/home/x/loopy.py", line 7, in spin\n    spin()\n'
+        tb = ("Traceback (most recent call last):\n" + frame * 4
+              + "RecursionError: maximum recursion depth exceeded\n")
+        f = _write(tmp_path, "tb.txt", tb)
+        rc = debugwiz_main.main(["stack", str(f)])
+        out = capsys.readouterr().out
+        assert rc == 0
+        assert "[RECURSION?] frame repeats 4 times" in out
+
+    def test_stack_garbage_is_honest_fail(self, tmp_path, capsys):
+        f = _write(tmp_path, "good.py", "print(1)")
+        rc = debugwiz_main.main(["stack", str(f)])
+        out = capsys.readouterr().out
+        assert rc == 1
+        assert "[FAIL] no traceback found" in out
+        assert "Traceback (most recent call last)" not in out
+
+    def test_stack_reads_stdin(self, tmp_path, capsys, monkeypatch):
+        import io
+        import sys
+        tb = ("Traceback (most recent call last):\n"
+              '  File "/home/x/a.py", line 3, in top\n'
+              "KeyError: 'k'\n")
+        monkeypatch.setattr(sys, "stdin", io.StringIO(tb))
+        rc = debugwiz_main.main(["stack"])
+        out = capsys.readouterr().out
+        assert rc == 0
+        assert "exception: KeyError: 'k'" in out
+        assert "stdin" in out
 
     def test_preview_no_staged(self, tmp_path, capsys):
         f = _write(tmp_path, "good.py", "print(1)")
