@@ -110,12 +110,15 @@ def _call_ollama(model: str, prompt: str, timeout: int = 120) -> str:
     """Stdlib-only daemon call. Returns '' on any failure."""
     try:
         payload = json.dumps({"model": model, "prompt": prompt,
-                              "stream": False}).encode()
+                              "stream": False, "format": "json"}).encode()
         req = urllib.request.Request(f"{OLLAMA_BASE}/api/generate", data=payload,
                                       headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read()).get("response", "").strip()
-    except Exception:
+    except Exception as e:
+        import sys as _sys
+        print(f"[codeguard debug] ollama call failed: {type(e).__name__}: {e}",
+              file=_sys.stderr)
         return ""
 
 
@@ -208,7 +211,8 @@ def audit(filepath: str, model: str | None = None) -> dict:
                 "reason": "no audit seat: daemon unreachable or no coder seat served",
                 "roster_size": len(roster)}
     raw = _call_ollama(audit_model,
-                       build_audit_prompt(language, code, filepath))
+                       build_audit_prompt(language, code, filepath),
+                       timeout=300)
     if not raw:
         return {"status": "FAILED", "reason": "ollama audit call failed",
                 "model": audit_model}
