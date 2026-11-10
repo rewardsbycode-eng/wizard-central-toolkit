@@ -3,7 +3,7 @@ try:
     from .rust_wizard import LAW_TEXT, RustWizard, package_version
 except ImportError:  # run directly as a script, outside the package
     sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
-    from rust_wizard import LAW_TEXT, RustWizard, package_version
+    from rust_wizard import LAW_TEXT, RustWizard, package_version  # type: ignore[no-redef]
 
 USAGE = """Rust Wizard — Rust project checker
 alias: rustwiz

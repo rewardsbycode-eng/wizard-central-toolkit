@@ -243,8 +243,8 @@ def _dispatch(argv=None):
             print(f"[TRACE] {p}: {len(tb['frames'])} frame(s)")
             for fr in tb["frames"]:
                 print(f"  File \"{fr['file']}\", line {fr['line']}, in {fr['func']}")
-        for e in r["errors"]:
-            print(f"[ERR] line {e['line']}: {e['type']} — {e['message']}")
+        for err in r["errors"]:
+            print(f"[ERR] line {err['line']}: {err['type']} — {err['message']}")
         return 1
     if cmd == "classify":
         r = classify_file(p)
@@ -319,8 +319,8 @@ def _dispatch(argv=None):
                  f"total errors: {r['total_errors']}"]
         for f, cnt in hotspot(p):
             lines.append(f"[HOT] {cnt} errors  {f}")
-            for e in trace(Path(f))["errors"]:
-                lines.append(f"  line {e['line']}: {e['type']} — {e['message']}")
+            for err in trace(Path(f))["errors"]:
+                lines.append(f"  line {err['line']}: {err['type']} — {err['message']}")
         target = (p / "debug-error-log.txt") if p.is_dir() \
             else p.with_name(p.stem + "-error-log.txt")
         ok, detail = _stage_via_writewiz(target, "\n".join(lines) + "\n")

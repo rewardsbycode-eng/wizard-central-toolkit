@@ -95,3 +95,8 @@ todo_wizard = "wiz_central_toolkit.todowiz.__main__:main"
 todowiz = "wiz_central_toolkit.todowiz.__main__:main"
 write_wizard = "wiz_central_toolkit.writewiz.__main__:main"
 writewiz = "wiz_central_toolkit.writewiz.__main__:main"
+
+[tool.mypy]
+python_version = "3.13"
+mypy_path = "src"
+ignore_missing_imports = true

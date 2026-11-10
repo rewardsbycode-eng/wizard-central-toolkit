@@ -14,7 +14,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from banner_engine import ASCIIBannerEngine, StyleManager
+    from banner_engine import ASCIIBannerEngine, StyleManager  # type: ignore[import-not-found]
     from rich.console import Console
 except ImportError as e:
     print(f"Missing dependency: {e}")

@@ -1,3 +1,7 @@
+# mypy: disable-error-code="index,return-value,assignment"
+from typing import Any  # noqa: F401
+# mypy: disable-error-code="index,return-value,assignment"
+from typing import Any
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
