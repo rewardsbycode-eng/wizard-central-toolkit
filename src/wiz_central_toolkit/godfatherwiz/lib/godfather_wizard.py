@@ -599,13 +599,13 @@ def sense_brief(raw_path):
                      f"({dirs} dirs, {files} files, {links} symlinks)")
         lines.append(f"size: {_human_bytes(total)} across {deep_files} files")
         lines.append("listing:")
-        for err in entries[:20]:
-            if err.is_symlink():
-                lines.append(f"  {err.name} -> {os.readlink(err)}")
-            elif err.is_dir():
-                lines.append(f"  {err.name}/")
+        for entry in entries[:20]:
+            if entry.is_symlink():
+                lines.append(f"  {entry.name} -> {os.readlink(entry)}")
+            elif entry.is_dir():
+                lines.append(f"  {entry.name}/")
             else:
-                lines.append(f"  {err.name}")
+                lines.append(f"  {entry.name}")
         if len(entries) > 20:
             lines.append(f"  ... (+{len(entries) - 20} more)")
         return 0, "\n".join(lines)
@@ -633,13 +633,13 @@ def sense_listing(raw_path):
     if not entries:
         return 0, "(empty directory)"
     out = []
-    for err in entries:
-        if err.is_symlink():
-            out.append(f"{err.name} -> {os.readlink(err)}")
-        elif err.is_dir():
-            out.append(f"{err.name}/")
+    for entry in entries:
+        if entry.is_symlink():
+            out.append(f"{entry.name} -> {os.readlink(entry)}")
+        elif entry.is_dir():
+            out.append(f"{entry.name}/")
         else:
-            out.append(err.name)
+            out.append(entry.name)
     return 0, "\n".join(out)
 
 def sense_read(raw_path):
