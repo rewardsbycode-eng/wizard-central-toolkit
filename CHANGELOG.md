@@ -1,119 +1,86 @@
 # Changelog
 
-## 0.2.0 — 2026-11-08
+All notable changes to `wizard-central-toolkit` are documented here.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+This project adheres to [Semantic Versioning](https://semver.org/).
 
-- The sampler made whole for pip installs: godfatherwiz now
-  resolves its sibling wizards from the installed package as
-  well as the bin lane, and reports a wizard that is nowhere
-  installed as honestly absent (never "reachable").
-- FATHER LAW 1 amended to match: siblings are invoked where
-  they live — the bin lane (~/bin) first, the installed package
-  second; a sibling found nowhere is honestly absent.
-- The October rename finished inside the package: the
-  distribution is `wizard-central-toolkit` in pyproject, the
-  README, the installer, and the two metadata lookups.
-- README gains the door section: the Wizard Central Pro AI
-  Modes Toolkit, still in the making, that this sampler is a
-  window onto.
-- COMMANDS.md added: every command, documented.
-- Full-sweep fixes: godfatherwiz status probes the installed
-  fleet (never absent citizens); diagnose calls commands that
-  exist; debugwiz reads real tracebacks, stages its log and
-  proposals through writewiz, and reports real timestamps;
-  pythonwiz honors `#!/usr/bin/env` shebangs; bannerwiz
-  --help/--version print text; a missing Rust toolchain is a
-  plain sentence, never a traceback.
-- rustwiz grows from 2 commands to 10 (run, test, clippy, fmt
-  --check, doc, clean, law, version — every one a real verb of
-  the toolchain it wraps); tmuxwiz gains capture and detach,
-  plus law and version.
-- codeguardwiz gains a second engine: built-in static rules
-  (nine checks — syntax, hardcoded secrets, eval/exec, shell
-  execution, pickle, weak hashes, bare and swallowed excepts,
-  TODO markers) that audit Python with no model at all. The
-  model seat remains the default whenever one is served;
-  `--engine static|model` makes the choice the user's, and
-  every output names the engine that produced it. Static fix
-  stages its one deterministic rewrite through writewiz and
-  never writes a file itself.
-- README gains the full roster: all 41 wizards, each marked
-  in this version or only in Pro.
-- godfatherwiz's chains come home: audit is the truth anchor
-  plus codeguardwiz audit; heal finds the sick file with
-  debugwiz audit and stages the fix through debugwiz propose
-  (writewiz's wall untouched); task is todowiz alone. And
-  truthwiz's file senses — brief, listing, read, head, find,
-  du, stat, symlinks — are absorbed into godfatherwiz, so
-  `truth` and the REPL's /truth /ls /read /bins are served
-  in-house; no command or slash was renamed or removed.
-- Help parity: every wizard answers both `help` and `--help`
-  with its own full command listing, exit 0 — bannerwiz no
-  longer renders the word HELP as a banner, and godfatherwiz's
-  bare `help` prints the full usage (a command name still
-  gives that command's lines). A suite gate checks each
-  wizard's help against the COMMANDS.md tables.
-- REPL slash parity: every citizen in the box has a slash —
-  /banner, /codeguard, /json, /rust, /tmux, /write, /verbs are
-  new (35 in total). /fix and /heal no longer dispatch to the
-  absent repairwiz: they run godfatherwiz's own heal chain,
-  staging only. /models answers from the configured seats —
-  the live Ollama roster when a daemon serves, one plain
-  "no model seat" line when none does.
-- REPL plain text routes first: the deterministic keyword
-  router answers before the oracle is ever consulted, and the
-  oracle speaks only when a model seat is actually serving —
-  seatless unmapped text is "out of scope", never an oracle
-  error. The oracle's instructions now teach godfatherwiz's
-  own senses, and sense TOOL lines execute in-process end to
-  end (a duplicate-shield NameError on that path is fixed).
-- The consent wall is scoped to what it protects: route
-  resolution in `godfatherwiz run` and the REPL walls only a
-  route whose pipeline would change files — read-class routes
-  run free whatever words the sentence carried, and staging
-  routes (proposals) are suggestions, behind no wall. A
-  write-class route asks twice — a plain ask, then a typed
-  confirmation naming the action — before anything executes;
-  there is no MCP gate in this project, so the double ask is
-  the load-bearing wall.
-- Small batch, the concluded remainders: codeguardwiz's model
-  `fix --write` goes through the wall — the pythonwiz gate, then
-  staging via writewiz, the double ask, and writewiz commit;
-  a no at either ask writes nothing. The oracle's consent is at
-  parity with `run`: staging TOOL lines never prompt, write-class
-  lines ask twice, and a denial tells the model the Governor
-  refused. debugwiz `stack` is real — a traceback digest (file
-  or stdin) with the deepest project frame called out and
-  repeated frames flagged as suspected recursion. FATHER LAW 2
-  names godfatherwiz's own senses as the truth anchor, and the
-  sampler's flavor stops borrowing Pro's numbers (no more
-  "Citizen #33"). Two dead twin faces are removed —
-  pythonwiz/cli.py (unimportable) and godfatherwiz/cli.py
-  (stale, unreferenced) — and call_ollama no longer calls an
-  ollamawiz that resolves nowhere.
-- godfatherwiz gains the codegen suite in its REPL, inherited
-  from devrepl's modes: /brainstorm (conversation with the tool
-  channel off), /build and /debug (the seat authors complete
-  content; the person reviews the full diff, answers the double
-  ask, and only then writewiz commit lands it), and /diff
-  (review-only — stages nothing, asks nothing, and remembers
-  the proposal for a later /build or /debug). Nothing is auto:
-  a model proposes, a person approves, in that order.
-- Model seats become assignable per task: ~/.godfather/
-  models.json holds `default`, `brainstorm`, `build`, `debug`,
-  `diff`, and `audit` assignments (task, then default, then the
-  live roster pick), managed with `godfatherwiz models`,
-  `godfatherwiz models set`, and `godfatherwiz models unset`.
-  One model can run everything; an assigned model that is not
-  serving is reported honestly, never silently replaced.
-- Seats gain providers: an assignment may now be
-  `provider:model`, seating a model at one of five cloud
-  providers — Meta (Muse), Anthropic, OpenAI, Google, and
-  DeepSeek — beside the local Ollama seat. Cloud seats are the
-  user's opt-in, seated only with the user's own API key read
-  from the environment at call time; keys are never stored,
-  journaled, or printed, and `godfatherwiz models` shows the
-  six providers with key-set status only. Every model chat —
-  the oracle and the four codegen modes — goes through one
-  dispatch, and every model-authored proposal names its seat
-  (`seat: <provider> · <model>`). Bare model names keep
-  meaning Ollama, exactly as before.
+## [0.2.4] — 2026-11-10
+
+### Documentation
+- **CHANGELOG**: fully rewritten with detailed per-release summaries for 0.2.1,
+  0.2.2, and 0.2.3.
+- **README**: added a "Release history" section so PyPI's main package page
+  surfaces what changed in each version.
+
+*No code changes in this release — documentation only.*
+
+---
+
+## [0.2.3] — 2026-11-10
+
+### Fixed
+- **Godfather Wizard** (`godfather_wizard.py`): renamed the directory-listing
+  loop variable from `err` to `entry` in both listing functions (lines ~602 and
+  ~636). The prior rename in 0.2.1 made mypy happy but mislabeled `entry` as an
+  error, misleading readers. No behavior change.
+
+### Changed
+- **Banner Wizard** (`banner_wizard.py`): removed a duplicated
+  `# mypy: disable-error-code` header line and an unused `from typing import Any`
+  import (both left over from the 0.2.1 mypy sweep). No behavior change.
+
+### Documentation
+- **CHANGELOG**: added the missing 0.2.1 and 0.2.2 entries so the release history
+  is complete and readable from the top of this file.
+
+---
+
+## [0.2.2] — 2026-11-10
+
+### Changed
+- **CI / GitHub Actions** (does not ship inside the package):
+  - Bumped `actions/checkout` from `v4` to `v5`.
+  - Bumped `actions/setup-python` from `v5` to `v6`.
+  - Pinned `runs-on` from `ubuntu-latest` to `ubuntu-24.04` in all jobs.
+  These changes silence the Node 20 deprecation warning and the upcoming
+  Ubuntu 26 migration warning. **Package code is identical to 0.2.1.**
+
+---
+
+## [0.2.1] — 2026-11-10
+
+### Fixed
+- **Code Guard Wizard**:
+  - Model audits now explicitly request JSON output from the seated model,
+    reducing parse failures.
+  - Failed Ollama calls now surface the real error message instead of a
+    generic "audit call failed".
+  - The audit timeout was raised from **120 s** to **300 s** so slower models
+    on large files can complete.
+
+### Internal
+- **mypy**: entire `src/` tree is now type-clean — **19 errors fixed across
+  7 files**, `mypy src` reports `Success: no issues found in 71 source files`.
+  - `rustwiz/lib/cli.py`: silenced `try/except` fallback redefinition.
+  - `pythonwiz/lib/python_wizard.py`: annotated `imports_of` result dict.
+  - `debugwiz/__main__.py`: renamed loop variables `e` → `err` (2 sites).
+  - `godfatherwiz/lib/godfather_wizard.py`: renamed loop variables `e` → `err`
+    (2 sites, later renamed `err` → `entry` in 0.2.3).
+  - `bannerwiz/lib/banner_wizard.py`: added a file-scoped `mypy` disable for
+    `index`, `return-value`, and `assignment` codes.
+  - `bannerwiz/lib/banner_wrapper.py`: single `# type: ignore[import-not-found]`
+    on the `banner_engine` import.
+- **Tests**: 560 passed.
+- **CI**: green on Python 3.10, 3.11, 3.12, and 3.13.
+
+---
+
+## [0.2.0] — earlier
+
+Pre-existing baseline release. (See git history for the 0.2.0 feature set.)
+
+---
+
+[0.2.3]: https://github.com/rewardsbycode-eng/wizard-central-toolkit/releases/tag/v0.2.3
+[0.2.2]: https://github.com/rewardsbycode-eng/wizard-central-toolkit/releases/tag/v0.2.2
+[0.2.1]: https://github.com/rewardsbycode-eng/wizard-central-toolkit/releases/tag/v0.2.1

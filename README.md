@@ -13,6 +13,26 @@
 
 **See it run:** [DEMO.md](DEMO.md) is the demo section — every feature tested live and documented from the real runs, from install check through the consent wall to the model codegen suite.
 
+## 📋 Release history
+
+Full changelog is in [CHANGELOG.md](https://github.com/rewardsbycode-eng/wizard-central-toolkit/blob/main/CHANGELOG.md).
+
+### 0.2.3 — 2026-11-10
+- **Fixed:** Godfather Wizard — renamed a misleading variable in directory listing.
+- **Changed:** Banner Wizard — removed duplicated mypy header and unused import.
+- **Docs:** backfilled the missing 0.2.1 and 0.2.2 changelog entries.
+- *No behavior changes.*
+
+### 0.2.2 — 2026-11-10
+- **CI only:** bumped GitHub Actions (`checkout@v5`, `setup-python@v6`), pinned `ubuntu-24.04`. No package code changes.
+
+### 0.2.1 — 2026-11-10
+- **Code Guard Wizard:** JSON output from model audits, real Ollama errors surfaced, timeout raised to 300 s.
+- **mypy:** all 71 source files type-clean (19 errors fixed).
+- **Tests:** 560 passed.
+
+### 0.2.0 — earlier
+- Initial public release baseline. See git history.
 ---
 
 ## 🌟 Fleet Inventory & Command Mapping
