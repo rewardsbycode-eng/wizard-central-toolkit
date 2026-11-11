@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wizard-central-toolkit"
-version = "0.2.5"
+version = "0.2.6"
 description = "Sovereign Developer Utilities Fleet & AI Router"
 readme = "README.md"
 license = "Apache-2.0"
