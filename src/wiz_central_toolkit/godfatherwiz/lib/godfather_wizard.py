@@ -1038,18 +1038,23 @@ import re
 
 GENERATION_VERBS = {"create", "write", "compose", "draft", "make", "generate", "tell", "give"}
 MUTATION_VERBS = {"delete", "remove", "overwrite", "move", "rename", "save", "commit", "destroy"}
-CONTENT_OBJECTS = {"poem", "story", "song", "list", "summary", "joke", "explanation", "translation", "script", "text", "code"}
+CONTENT_OBJECTS = {"poem", "story", "song", "list", "summary", "joke", "explanation", "translation", "script", "text", "code", "stanza", "paragraph", "line"}
 
 def is_generation_intent(text: str) -> bool:
+    # A quick check: if it's a route to list a directory, it's NOT generation.
+    if text.startswith("list /") or text.startswith("list ~") or text.startswith("list ."):
+        return False
+        
     words = re.findall(r'\b\w+\b', text.lower())
     if not words:
         return False
-    first_word = words[0]
-    if first_word in MUTATION_VERBS:
-        if any(w in CONTENT_OBJECTS for w in words[1:]):
-            return True
-        return False
-    if first_word in GENERATION_VERBS:
+        
+    # If it has a content object (poem, stanza, script), it's generation.
+    if any(w in CONTENT_OBJECTS for w in words):
+        return True
+        
+    # If it's a generation verb but no object ("write something"), let it pass.
+    if words[0] in GENERATION_VERBS:
         return True
     return False
 
@@ -1336,7 +1341,7 @@ def codegen_proposal(task, path, instruction, current, extra_context=""):
         {"role": "user", "content": "\n".join(user)},
     ]
     try:
-        reply = call_seat_chat(seat, messages, stream=stream)
+        reply = call_seat_chat(seat, messages)
     except Exception as e:
         return None, (f"[FAIL] {task} seat unreachable "
                       f"({type(e).__name__}: {e})")

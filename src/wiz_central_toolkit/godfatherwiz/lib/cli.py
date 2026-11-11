@@ -889,13 +889,14 @@ def run_repl():
         # Free generation: intercept "write a poem" before the wall.
         from .godfather_wizard import is_generation_intent
         if not brainstorm_mode and not raw_input.startswith("/") and is_generation_intent(raw_input):
+            # It's a generation intent, so let the oracle handle it (no wall).
             seat = seat_for("default")
             if seat is None:
                 print("out of scope — no model seat is serving")
                 continue
             print(f"🤖 consulting oracle (seat: {seat_label(seat)})...", flush=True)
             from .godfather_wizard import oracle_tool_loop
-            reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory, stream=stream_mode)
+            reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory)
             print(f"\n👑 godfather: {reply}\n")
             speak_if_enabled(reply)
             continue
@@ -938,7 +939,7 @@ def run_repl():
         print(f"🤖 consulting oracle (seat: {seat_label(seat)})...",
               flush=True)
         from .godfather_wizard import oracle_tool_loop
-        reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory, stream=stream_mode)
+        reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory)
         print(f"\n👑 godfather: {reply}\n")
         speak_if_enabled(reply)  # the whole word, uncut
 
