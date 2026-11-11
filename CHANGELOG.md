@@ -4,6 +4,24 @@ All notable changes to `wizard-central-toolkit` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.5] — 2026-11-10
+
+### Documentation
+- **CHANGELOG**: added missing, detailed summaries for 0.2.1, 0.2.2, 0.2.3, and 0.2.4.
+- **README**: updated release history and version references so PyPI displays the full narrative.
+- **Godfather Wizard**: verified that `parse_seat` correctly identifies colon-tagged Ollama models (e.g., `better-tools:v4-cpu`) and that the REPL dynamically renders the `GODFATHER` ASCII banner on launch.
+
+---
+
+## [0.2.5] — 2026-11-10
+
+### Documentation
+- **CHANGELOG**: added missing, detailed summaries for 0.2.1, 0.2.2, 0.2.3, and 0.2.4.
+- **README**: updated release history and version references so PyPI displays the full narrative.
+- **Godfather Wizard**: verified that `parse_seat` correctly identifies colon-tagged Ollama models (e.g., `better-tools:v4-cpu`) and that the REPL dynamically renders the `GODFATHER` ASCII banner on launch.
+
+---
+
 ## [0.2.4] — 2026-11-10
 
 ### Documentation
