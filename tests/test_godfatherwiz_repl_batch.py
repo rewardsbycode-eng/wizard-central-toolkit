@@ -324,3 +324,14 @@ def test_routes_display_hides_scheduled_tasks(monkeypatch, capsys):
     assert "diff/compare" in out and "diff_wizard files" in out
     assert "task_63475" not in out
     assert "scheduled_at" not in out
+
+# --- 0.2.5: Verb + Object Generation Classifier ---
+from wiz_central_toolkit.godfatherwiz.lib.godfather_wizard import is_generation_intent
+
+def test_generation_classifier():
+    assert is_generation_intent("create a poem") is True
+    assert is_generation_intent("write a poem") is True
+    assert is_generation_intent("create a script") is True
+    assert is_generation_intent("delete the second stanza") is True
+    assert is_generation_intent("delete ~/x.py") is False
+    assert is_generation_intent("kill the tmux session") is False

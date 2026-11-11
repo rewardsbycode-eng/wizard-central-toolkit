@@ -717,6 +717,7 @@ def run_repl():
     brainstorm_memory = []
     brainstorm_tool_noted = False
     last_proposal = None
+    stream_mode = False
 
     while True:
         try:
@@ -789,6 +790,11 @@ def run_repl():
                 last_proposal = _diff_codegen(parts, last_proposal)
                 continue
 
+        if raw_input in ("/stream_on", "/stream_off"):
+            stream_mode = (raw_input == "/stream_on")
+            print(f"[OK] model streaming is now {'ON' if stream_mode else 'OFF'}")
+            continue
+
         if raw_input == "/help":
             print("📜 AVAILABLE SLASH COMMANDS:")
             for cmd, desc in slash_map.items():
@@ -797,6 +803,7 @@ def run_repl():
                   " (proposal form; the two-file form above compares two files)")
             print("  /voices         → pick voice (numbered dropdown)")
             print("  /model          → pick model (numbered dropdown)")
+            print("  /stream_on|off  → toggle token streaming (default off)")
             print("  /more-commands  → full fleet arsenal (all citizens)")
             continue
 
@@ -879,6 +886,20 @@ def run_repl():
                 speak_if_enabled(reply)
             continue
 
+        # Free generation: intercept "write a poem" before the wall.
+        from .godfather_wizard import is_generation_intent
+        if not brainstorm_mode and not raw_input.startswith("/") and is_generation_intent(raw_input):
+            seat = seat_for("default")
+            if seat is None:
+                print("out of scope — no model seat is serving")
+                continue
+            print(f"🤖 consulting oracle (seat: {seat_label(seat)})...", flush=True)
+            from .godfather_wizard import oracle_tool_loop
+            reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory, stream=stream_mode)
+            print(f"\n👑 godfather: {reply}\n")
+            speak_if_enabled(reply)
+            continue
+
         # Plain text: the deterministic router answers FIRST (R4).
         # Only unmapped text reaches the oracle, and only when a
         # model seat is actually serving — seatless unmapped text
@@ -917,7 +938,7 @@ def run_repl():
         print(f"🤖 consulting oracle (seat: {seat_label(seat)})...",
               flush=True)
         from .godfather_wizard import oracle_tool_loop
-        reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory)
+        reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory, stream=stream_mode)
         print(f"\n👑 godfather: {reply}\n")
         speak_if_enabled(reply)  # the whole word, uncut
 

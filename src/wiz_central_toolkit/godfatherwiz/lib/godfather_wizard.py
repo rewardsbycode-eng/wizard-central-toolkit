@@ -1033,7 +1033,27 @@ def render_banner():
 # ORACLE WITH HANDS — the Governor's tool channel for the cockpit
 # ------------------------------------------------------------------
 
-ORACLE_SPINE = """You command the Sovereign Fleet — check AVAILABLE TOOLS below for the live citizen count and capacity.
+
+import re
+
+GENERATION_VERBS = {"create", "write", "compose", "draft", "make", "generate", "tell", "give"}
+MUTATION_VERBS = {"delete", "remove", "overwrite", "move", "rename", "save", "commit", "destroy"}
+CONTENT_OBJECTS = {"poem", "story", "song", "list", "summary", "joke", "explanation", "translation", "script", "text", "code"}
+
+def is_generation_intent(text: str) -> bool:
+    words = re.findall(r'\b\w+\b', text.lower())
+    if not words:
+        return False
+    first_word = words[0]
+    if first_word in MUTATION_VERBS:
+        if any(w in CONTENT_OBJECTS for w in words[1:]):
+            return True
+        return False
+    if first_word in GENERATION_VERBS:
+        return True
+    return False
+
+ORACLE_SPINE = """Composing text is not a mutation. Only a write_wizard commit mutates. When asked to create content, create it in the reply.\nYou command the Sovereign Fleet — check AVAILABLE TOOLS below for the live citizen count and capacity.
 You act as the central dispatcher and reasoning engine for all interactive wizard queries.
 You command the real CLI wizards listed below on this machine. You have NO eyes and NO hands
 of your own. Your only way to act or observe is the TOOL channel.
@@ -1316,7 +1336,7 @@ def codegen_proposal(task, path, instruction, current, extra_context=""):
         {"role": "user", "content": "\n".join(user)},
     ]
     try:
-        reply = call_seat_chat(seat, messages)
+        reply = call_seat_chat(seat, messages, stream=stream)
     except Exception as e:
         return None, (f"[FAIL] {task} seat unreachable "
                       f"({type(e).__name__}: {e})")
