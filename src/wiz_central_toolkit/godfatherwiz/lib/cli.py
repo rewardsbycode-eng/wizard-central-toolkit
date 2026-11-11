@@ -894,9 +894,8 @@ def run_repl():
             if seat is None:
                 print("out of scope — no model seat is serving")
                 continue
-            print(f"🤖 consulting oracle (seat: {seat_label(seat)})...", flush=True)
-            from .godfather_wizard import oracle_tool_loop
-            reply, chat_memory = oracle_tool_loop(raw_input, seat, chat_memory)
+            from .godfather_wizard import generate_text
+            reply = generate_text(raw_input, seat)
             print(f"\n👑 godfather: {reply}\n")
             speak_if_enabled(reply)
             continue

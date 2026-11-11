@@ -4,6 +4,15 @@ All notable changes to `wizard-central-toolkit` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.7] — 2026-11-10
+
+### Added
+- **Godfather Wizard**: `generate_text()` — a lightweight model call for pure generation (poems, stories, etc.) that bypasses the heavy tool-loop system prompt, preventing CPU timeouts on small models.
+
+### Fixed
+- **Godfather Wizard**: The REPL now routes generation intents directly to `generate_text()` instead of `oracle_tool_loop()`, fixing the 8-minute timeout and tool hallucination on CPU-only hardware.
+
+---
 ## [0.2.6] — 2026-11-10
 
 ### Fixed

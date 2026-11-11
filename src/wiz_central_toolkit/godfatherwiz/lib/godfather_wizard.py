@@ -1059,6 +1059,8 @@ def is_generation_intent(text: str) -> bool:
     return False
 
 ORACLE_SPINE = """Composing text is not a mutation. Only a write_wizard commit mutates. When asked to create content, create it in the reply.\nYou command the Sovereign Fleet — check AVAILABLE TOOLS below for the live citizen count and capacity.
+
+CRITICAL RULE: If the user asks you to write, compose, create, or tell a story, poem, joke, or text, you MUST output the text directly. DO NOT use any tools. DO NOT output TOOL lines. Just reply with the creative text.
 You act as the central dispatcher and reasoning engine for all interactive wizard queries.
 You command the real CLI wizards listed below on this machine. You have NO eyes and NO hands
 of your own. Your only way to act or observe is the TOOL channel.
@@ -1575,3 +1577,15 @@ def oracle_tool_loop(question, model, memory, max_rounds=5):
 
     return ("[FAIL] oracle exhausted tool rounds without a plain answer "
             "(run /model to pick a stronger seat)", memory)
+
+def generate_text(prompt: str, seat: tuple) -> str:
+    """A lightweight text generation call that bypasses the heavy tool-spine."""
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant. Answer the user's request directly. Do not use any tools."},
+        {"role": "user", "content": prompt},
+    ]
+    try:
+        return call_seat_chat(seat, messages)
+    except Exception as e:
+        return f"[FAIL] {type(e).__name__}: {e}"
+        return f"[FAIL] {type(e).__name__}: {e}"
