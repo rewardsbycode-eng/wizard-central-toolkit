@@ -1,7 +1,7 @@
 # Wizard Central Toolkit (`wizard-central-toolkit`)
 
 > **The Sovereign Developer Utilities Fleet & AI Router**  
-> Fast, zero-dependency, local-first CLI tools designed for Linux development, system orchestration, and deterministic safety policy execution.
+> Fast, local-first CLI tools built on the Python standard library, plus two small display libraries, designed for Linux development, system orchestration, and deterministic safety policy execution.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Validation Suite](https://img.shields.io/badge/Validation-13%2F13_Passed-brightgreen.svg)](#validation--testing)
@@ -16,6 +16,36 @@
 ## 📋 Release history
 
 Full changelog is in [CHANGELOG.md](https://github.com/rewardsbycode-eng/wizard-central-toolkit/blob/main/CHANGELOG.md).
+
+### 0.2.8 — 2026-11-10
+
+- **Docs:** this release history completed (0.2.4—0.2.7 added); CHANGELOG duplicate 0.2.5 entry removed; tagline corrected — the toolkit builds on the Python standard library plus two small display libraries; sampler roster count clarified (12 wizards ship here, 10 of them from the roster of 41).
+
+- *No behavior changes.*
+
+### 0.2.7 — 2026-11-10
+
+- **Godfather Wizard:** `generate_text()` — generation intents (poems, stories) take a lightweight model call and answer in seconds on CPU-only hardware, instead of riding the full tool-loop prompt.
+
+- **REPL:** `/stream_on` and `/stream_off` toggles.
+
+### 0.2.6 — 2026-11-10
+
+- **Godfather Wizard:** the consent wall now reads verb + object — composing text ("write a poem", "delete the second stanza") passes free; mutating real files ("delete ~/x.py") still asks twice.
+
+- **Fixed:** path-bearing read intents (`list /tmp`) route to the directory lister, not the oracle.
+
+### 0.2.5 — 2026-11-10
+
+- **Godfather Wizard:** the seat parser checks the live Ollama roster first — a colon-tagged local model (`better-tools:v4-cpu`) seats as a local model instead of being misread as a cloud provider.
+
+- **REPL:** dynamic banner, fitted to the terminal on every launch.
+
+### 0.2.4 — 2026-11-10
+
+- **Docs:** detailed CHANGELOG; this release-history section added.
+
+- *No behavior changes.*
 
 ### 0.2.3 — 2026-11-10
 - **Fixed:** Godfather Wizard — renamed a misleading variable in directory listing.
@@ -120,9 +150,7 @@ ready, this page will say where to find it.
 
 ## The full roster — all 41 wizards
 
-Wizard Central's fleet counts 41 wizards. This sampler ships
-10 of them; the other 31 live in the Wizard Central Pro AI
-Modes Toolkit.
+Wizard Central's fleet counts 41 wizards. This sampler ships 12 wizards - 10 of them from that roster; the other 31 roster wizards live in the Wizard Central Pro AI Modes Toolkit, and the Tmux and Rust Wizards live only here.
 
 | # | Wizard | Command | Where it lives |
 | :--- | :--- | :--- | :--- |

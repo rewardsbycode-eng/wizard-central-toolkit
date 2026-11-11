@@ -4,6 +4,17 @@ All notable changes to `wizard-central-toolkit` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.8] — 2026-11-10
+
+### Documentation
+- **README**: release history completed (0.2.4—0.2.7 entries added); tagline corrected — the toolkit builds on the Python standard library plus two small display libraries (pyfiglet, rich); sampler roster count clarified — 12 wizards ship here, 10 of them from the roster of 41.
+
+### Fixed
+- **CHANGELOG**: removed a duplicated 0.2.5 entry (the entry appeared twice, back to back).
+
+*No code changes in this release — documentation only.*
+
+---
 ## [0.2.7] — 2026-11-10
 
 ### Added
@@ -19,15 +30,6 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Godfather Wizard**: `is_generation_intent` now correctly distinguishes directory listings (e.g., `list /tmp`) from content generation (e.g., `write a list of items`).
 
 ---
-## [0.2.5] — 2026-11-10
-
-### Documentation
-- **CHANGELOG**: added missing, detailed summaries for 0.2.1, 0.2.2, 0.2.3, and 0.2.4.
-- **README**: updated release history and version references so PyPI displays the full narrative.
-- **Godfather Wizard**: verified that `parse_seat` correctly identifies colon-tagged Ollama models (e.g., `better-tools:v4-cpu`) and that the REPL dynamically renders the `GODFATHER` ASCII banner on launch.
-
----
-
 ## [0.2.5] — 2026-11-10
 
 ### Documentation
